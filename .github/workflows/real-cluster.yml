@@ -47,20 +47,47 @@ jobs:
           kubectl apply -n demo -f examples/vulnerable/
           kubectl get all -n demo
 
+      # Суулгагчид нь upstream-ийн сүлжээнээс хамаарна. 2026-09-18-нд Kubescape-ийн
+      # install.sh түр зуурын саатлаар exit 1 өгч, БҮХЭЛ run унаж, doctor ба
+      # "scanner бүр finding өгсөн эсэх" шалгалт огт ажиллаагүй. Тиймээс:
+      #   1) суулгалт бүрийг 3 удаа дахин оролдоно;
+      #   2) эцэст нь бүтэхгүй бол алхам алдаатай гэж тэмдэглэгдэнэ (шар), гэхдээ
+      #      run үргэлжилнэ — scanner нь scanner_runs-д "unavailable" гэж гарч,
+      #      үлдсэн scanner-ууд шалгагдаж, тайлан artifact болж хадгалагдана.
+      # Ингэснээр суулгагчийн флюк ба scanner ЖИНХЭНЭ эвдэрсэн хоёр ялгарна.
       - name: Install Trivy
-        run: curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+        run: |
+          for i in 1 2 3; do
+            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin && exit 0
+            echo "::warning::trivy суулгалт $i дэх оролдлого амжилтгүй — дахин оролдоно"; sleep 5
+          done
+          exit 1
+        continue-on-error: true
 
       - name: Install Kubescape
         run: |
-          curl -s https://raw.githubusercontent.com/kubescape/kubescape/master/install.sh | /bin/bash
-          echo "$HOME/.kubescape/bin" >> "$GITHUB_PATH"
+          # -f ЗААВАЛ: үгүй бол 404 буцаахад HTML хуудсыг шууд bash-д дамжуулна.
+          for i in 1 2 3; do
+            if curl -sfL https://raw.githubusercontent.com/kubescape/kubescape/master/install.sh | /bin/bash; then
+              echo "$HOME/.kubescape/bin" >> "$GITHUB_PATH"; exit 0
+            fi
+            echo "::warning::kubescape суулгалт $i дэх оролдлого амжилтгүй — дахин оролдоно"; sleep 5
+          done
+          exit 1
+        continue-on-error: true
 
       - name: Install Popeye
         run: |
-          VER="$(curl -s https://api.github.com/repos/derailed/popeye/releases/latest | grep -o '"tag_name": *"[^"]*"' | head -1 | sed -E 's/.*"v?([^"]+)".*/\1/')"
-          curl -sfL "https://github.com/derailed/popeye/releases/download/v${VER}/popeye_linux_amd64.tar.gz" -o /tmp/popeye.tgz
-          tar -xzf /tmp/popeye.tgz -C /tmp popeye
-          sudo install -m0755 /tmp/popeye /usr/local/bin/popeye
+          for i in 1 2 3; do
+            VER="$(curl -s https://api.github.com/repos/derailed/popeye/releases/latest | grep -o '"tag_name": *"[^"]*"' | head -1 | sed -E 's/.*"v?([^"]+)".*/\1/')"
+            if [ -n "$VER" ] \
+              && curl -sfL "https://github.com/derailed/popeye/releases/download/v${VER}/popeye_linux_amd64.tar.gz" -o /tmp/popeye.tgz \
+              && tar -xzf /tmp/popeye.tgz -C /tmp popeye; then
+              sudo install -m0755 /tmp/popeye /usr/local/bin/popeye; exit 0
+            fi
+            echo "::warning::popeye суулгалт $i дэх оролдлого амжилтгүй — дахин оролдоно"; sleep 5
+          done
+          exit 1
         continue-on-error: true # popeye нэмэлт — суулгаж чадахгүй бол алгасна
 
       - name: Doctor — which scanners are live

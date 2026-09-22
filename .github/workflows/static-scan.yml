@@ -45,8 +45,16 @@ jobs:
         with:
           python-version: "3.12"
 
+      # Checkov бол энэ workflow-ийн ЦОРЫН ГАНЦ scanner тул суулгаж чадахгүй бол
+      # үргэлжлүүлэх утгагүй — унана. Гэхдээ PyPI-ийн түр саатлаас болж
+      # хуваарьт хамгаалалт хоосон улаан болохоос сэргийлж 3 удаа оролдоно.
       - name: Install Checkov
-        run: pip install --quiet checkov
+        run: |
+          for i in 1 2 3; do
+            pip install --quiet checkov && exit 0
+            echo "::warning::checkov суулгалт $i дэх оролдлого амжилтгүй — дахин оролдоно"; sleep 5
+          done
+          exit 1
 
       - name: Versions
         run: |
