@@ -192,6 +192,37 @@ func (r *Registry) Get(id string) (Control, bool) {
 	return Control{}, false
 }
 
+// Languages — registry-д ЯМАР НЭГ control-ийн гарчигт бодитоор байгаа хэлүүд,
+// эрэмбэлсэн. `report --lang xx` нь байхгүй хэл зааж өгөхөд I18n.Get нь чимээгүй
+// en рүү унадаг тул хэрэглэгч "монгол тайлан авлаа" гэж эндүүрэхээс сэргийлж
+// урьдчилан шалгахад хэрэглэнэ.
+func (r *Registry) Languages() []string {
+	seen := map[string]bool{}
+	for _, c := range r.Controls {
+		for lang, txt := range c.Title {
+			if txt != "" {
+				seen[lang] = true
+			}
+		}
+	}
+	out := make([]string, 0, len(seen))
+	for l := range seen {
+		out = append(out, l)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// HasLang — тухайн хэл дээр орчуулагдсан гарчиг ядаж нэг байгаа эсэх.
+func (r *Registry) HasLang(lang string) bool {
+	for _, l := range r.Languages() {
+		if l == lang {
+			return true
+		}
+	}
+	return false
+}
+
 // ResolverContext — нэг scanner rule олон canonical руу зурагдсан үед
 // зөв canonical-ыг сонгоход хэрэглэх finding-ийн дэд мэдээлэл.
 // Жишээ: trivy "CVE-*" -> IMG-001(CRITICAL)/IMG-002(HIGH)-ыг Severity-ээр;

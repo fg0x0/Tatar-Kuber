@@ -146,6 +146,7 @@ type attackTactic struct {
 type view struct {
 	finding.ScanResult
 	L               labels
+	HTMLLang        string // <html lang="..."> — тайлангийн бодит хэл
 	TopRisks        []topRisk
 	Recommendations []string
 	AttackExposure  []attackTactic
@@ -153,7 +154,11 @@ type view struct {
 
 // Render — ScanResult -> HTML dashboard.
 func Render(w io.Writer, res finding.ScanResult) error {
-	vm := view{ScanResult: res, L: pickLabels(res.Metadata.Lang)}
+	lang := res.Metadata.Lang
+	if lang != "mn" {
+		lang = "en" // labelsEN-тэй нийцүүлнэ: тайлан англи бол lang="en"
+	}
+	vm := view{ScanResult: res, L: pickLabels(lang), HTMLLang: lang}
 
 	// ID -> оноонд эзлэх хувь (breakdown-оос; TopRisks-тэй эрэмбэ нийцнэ).
 	share := map[string]float64{}
@@ -209,7 +214,7 @@ func Render(w io.Writer, res finding.ScanResult) error {
 }
 
 const dashboard = `<!DOCTYPE html>
-<html lang="mn">
+<html lang="{{.HTMLLang}}">
 <head>
 <meta charset="utf-8">
 <title>TATAR-Kuber Security Report</title>

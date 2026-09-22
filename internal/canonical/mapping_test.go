@@ -415,3 +415,35 @@ controls:
 		t.Errorf("хүчинтэй дүрэм унасан: %v", err)
 	}
 }
+
+// Languages/HasLang — `report --lang` нь registry-д байхгүй хэлийг ЧИМЭЭГҮЙ en
+// рүү унагахгүйн тулд юу бодитоор орчуулагдсаныг мэдэх ёстой.
+func TestRegistryLanguages(t *testing.T) {
+	r, err := Load(regPath)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	langs := r.Languages()
+	if len(langs) < 2 || langs[0] != "en" {
+		t.Fatalf("хэлүүд: %v (эрэмбэлсэн байх, en багтсан байх)", langs)
+	}
+	for _, l := range []string{"en", "mn"} {
+		if !r.HasLang(l) {
+			t.Errorf("%s хэл байх ёстой", l)
+		}
+	}
+	if r.HasLang("de") {
+		t.Error("de хэл байх ёсгүй")
+	}
+	// Хоёр хэл дээр БҮРЭН орчуулагдсан эсэх — дутуу бол монгол тайлан хагас
+	// англиар гарна. Энэ нь чимээгүй байж болохгүй.
+	var missing []string
+	for _, c := range r.Controls {
+		if c.Title["mn"] == "" || c.Remediation["mn"] == "" {
+			missing = append(missing, c.ID)
+		}
+	}
+	if len(missing) > 0 {
+		t.Errorf("mn орчуулга дутуу control: %v", missing)
+	}
+}

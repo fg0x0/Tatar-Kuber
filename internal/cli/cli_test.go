@@ -126,3 +126,81 @@ func TestCLI_Diff_E2E(t *testing.T) {
 		t.Errorf("missing file exit=%d, want 2", code)
 	}
 }
+
+// Хэл бол ГАРАЛТЫН шинж чанар: нэг scan-result.json-оос хоёр хэл дээрх тайлан
+// гарах ёстой, scan-ыг дахин ажиллуулахгүйгээр. v1.0.2 хүртэл хэл нь scan дээр
+// л сонгогддог байсан тул монгол тайлан авахын тулд бүх scan дахин ажилладаг
+// байв (cluster руу дахин хандах, 4 tool дахин ажиллуулах).
+func TestCLI_ReportLangSwitchesWithoutRescan(t *testing.T) {
+	out := t.TempDir()
+	if code := cmdScan([]string{"--raw-dir", "../../examples/demo", "--cluster", "lang", "--lang", "en", "-o", out}); code != 0 {
+		t.Fatalf("scan exit=%d", code)
+	}
+	res := filepath.Join(out, "scan-result.json")
+	before, err := os.ReadFile(res)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	read := func(lang string) finding.ScanResult {
+		p := filepath.Join(out, "r-"+lang+".json")
+		args := []string{"--input", res, "-o", "json", "--out", p}
+		if lang != "" {
+			args = append(args, "--lang", lang)
+		}
+		if code := cmdReport(args); code != 0 {
+			t.Fatalf("report --lang %s exit=%d", lang, code)
+		}
+		var r finding.ScanResult
+		b, err := os.ReadFile(p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := json.Unmarshal(b, &r); err != nil {
+			t.Fatal(err)
+		}
+		return r
+	}
+
+	en, mn := read("en"), read("mn")
+	if en.Metadata.Lang != "en" || mn.Metadata.Lang != "mn" {
+		t.Fatalf("metadata.lang: en=%q mn=%q", en.Metadata.Lang, mn.Metadata.Lang)
+	}
+	if len(en.Findings) == 0 || len(en.Findings) != len(mn.Findings) {
+		t.Fatalf("finding тоо зөрөв: %d vs %d", len(en.Findings), len(mn.Findings))
+	}
+	// Ядаж нэг гарчиг ҮНЭХЭЭР өөр байх ёстой — эс бөгөөс сэлгээ ажиллаагүй.
+	diffs := 0
+	for i := range en.Findings {
+		if en.Findings[i].ID != mn.Findings[i].ID {
+			t.Fatalf("finding эрэмбэ зөрөв: %s vs %s", en.Findings[i].ID, mn.Findings[i].ID)
+		}
+		if en.Findings[i].Title != mn.Findings[i].Title {
+			diffs++
+		}
+	}
+	if diffs == 0 {
+		t.Error("en ба mn гарчиг бүгд ижил — ApplyLang ажиллаагүй")
+	}
+
+	// --lang өгөөгүй бол scan-ы хэл хэвээр (буцаад нийцтэй).
+	if d := read(""); d.Metadata.Lang != "en" {
+		t.Errorf("--lang-гүй: lang=%q, want en", d.Metadata.Lang)
+	}
+
+	// Хамгийн чухал: эх файл ХӨНДӨГДӨӨГҮЙ байх ёстой — эс бөгөөс result_hash
+	// хүчингүй болж verify унана.
+	after, err := os.ReadFile(res)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(before) != string(after) {
+		t.Error("report --lang нь scan-result.json-ыг өөрчилсөн — result_hash хүчингүй болно")
+	}
+
+	// Registry-д байхгүй хэлийг ЧИМЭЭГҮЙ en рүү унагахгүй, алдаа болгоно.
+	if code := cmdReport([]string{"--input", res, "-o", "json", "--lang", "de",
+		"--out", filepath.Join(out, "de.json")}); code != 3 {
+		t.Errorf("--lang de exit=%d, want 3", code)
+	}
+}

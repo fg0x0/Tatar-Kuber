@@ -106,10 +106,16 @@ jobs:
           echo "----- summary -----"
           ./tatar-kuber report --input out/scan-result.json -o json | grep -E '"risk_score"|"total_findings"|"scan_mode"' || true
 
-      - name: Reports (HTML + SARIF)
+      # Хоёр хэлийг НЭГ scan-аас гаргана — `report --lang`-ийг бодитоор шалгах
+      # цорын ганц арга нь ашиглах. Хэрэв registry-д mn орчуулга дутвал эсвэл
+      # ApplyLang эвдэрвэл энд илэрнэ.
+      - name: Reports (HTML + SARIF, en + mn)
         run: |
           ./tatar-kuber report --input out/scan-result.json -o html  --out out/report.html
+          ./tatar-kuber report --input out/scan-result.json -o html --lang mn --out out/report-mn.html
           ./tatar-kuber report --input out/scan-result.json -o sarif --out out/tatar-kuber.sarif
+          grep -q '<html lang="en">' out/report.html
+          grep -q '<html lang="mn">' out/report-mn.html
 
       - name: Upload live scan artifacts (report + raw scanner output as evidence)
         if: always()

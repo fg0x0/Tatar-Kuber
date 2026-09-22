@@ -20,8 +20,11 @@ TATAR-Kuber runs **Trivy · Kubescape · Checkov · Popeye**, unifies their outp
 ```bash
 tatar-kuber scan   --kubeconfig ~/.kube/config -o out      # or: --raw-dir ./raw  (offline)
 tatar-kuber report --input out/scan-result.json -o html --out report.html
-# Mongolian report:  tatar-kuber scan ... --lang mn
+tatar-kuber report --input out/scan-result.json -o html --lang mn --out mn.html
 ```
+
+One scan, either language: `--lang` lives on `report`, so switching language never
+re-runs the scanners or touches the cluster again.
 
 ## Report — one issue, every scanner, both languages
 
@@ -492,9 +495,12 @@ secrets management (Vault)-ыг **орлохгүй — тэдгээртэй ха
 ```bash
 git clone https://github.com/ochmunkh/tatar-kuber-lab
 tatar-kuber scan --raw-dir tatar-kuber-lab/raw \
-    --registry schema/canonical-controls.yaml --lang mn -o out
-tatar-kuber report --input out/scan-result.json -o html --out report.html
+    --registry schema/canonical-controls.yaml -o out
+tatar-kuber report --input out/scan-result.json -o html --lang mn --out report.html
 ```
+
+Нэг scan, аль ч хэл: `--lang` нь `report` дээр байдаг тул хэл сэлгэхэд scanner-ууд
+дахин ажиллахгүй, cluster руу дахин хандахгүй.
 
 ### Архитектур
 

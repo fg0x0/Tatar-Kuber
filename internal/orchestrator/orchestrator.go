@@ -234,7 +234,7 @@ func (p *Pipeline) Process(raws []scanner.RawResult, m Meta) (finding.ScanResult
 	if lang == "" {
 		lang = "en"
 	}
-	applyLang(scored, p.reg, lang) // title/remediation-ыг сонгосон хэлээр
+	ApplyLang(scored, p.reg, lang) // title/remediation-ыг сонгосон хэлээр
 
 	res := finding.ScanResult{
 		SchemaVersion: "1.0",
@@ -305,9 +305,16 @@ func sortBySeverity(fs []finding.Finding) {
 	})
 }
 
-// applyLang — canonical registry-ийн сонгосон хэл дээрх title/remediation-аар
+// ApplyLang — canonical registry-ийн сонгосон хэл дээрх title/remediation-аар
 // finding-үүдийг дарж бичнэ (scanner-ийн текстээс илүү curated, тогтвортой).
-func applyLang(fs []finding.Finding, reg *canonical.Registry, lang string) {
+//
+// Экспортлогдсон шалтгаан: `report --lang` нь scan-ыг ДАХИН АЖИЛЛУУЛАЛГҮЙГЭЭР
+// ижил scan-result.json-ыг өөр хэлээр гаргахдаа үүнийг дуудна. Хэл бол scan-ы
+// биш, ГАРАЛТЫН шинж чанар.
+//
+// ХЯЗГААР: registry-д байхгүй (эсвэл canonical_control нь хоосон) finding-ийн
+// гарчиг нь scanner-ийн эх текстээрээ үлдэнэ — орчуулах эх сурвалж байхгүй.
+func ApplyLang(fs []finding.Finding, reg *canonical.Registry, lang string) {
 	for i := range fs {
 		ctrl, ok := reg.Get(fs[i].CanonicalControl)
 		if !ok {

@@ -46,3 +46,22 @@ func TestRender_HTML(t *testing.T) {
 		}
 	}
 }
+
+// <html lang> нь тайлангийн БОДИТ хэлтэй таарах ёстой. v1.0.2 хүртэл "mn" гэж
+// хатуу бичээстэй байсан тул англи тайлан өөрийгөө монгол гэж зарладаг байв —
+// дэлгэц уншигч, орчуулагч, хайлтын индексжүүлэлт бүгд үүнийг уншдаг.
+func TestRender_HTMLLangMatchesReportLang(t *testing.T) {
+	for _, tc := range []struct{ meta, want string }{
+		{"mn", "mn"}, {"en", "en"}, {"", "en"}, {"de", "en"},
+	} {
+		var b strings.Builder
+		res := finding.ScanResult{SchemaVersion: "1.0"}
+		res.Metadata.Lang = tc.meta
+		if err := Render(&b, res); err != nil {
+			t.Fatal(err)
+		}
+		if want := `<html lang="` + tc.want + `">`; !strings.Contains(b.String(), want) {
+			t.Errorf("metadata.lang=%q: %s олдсонгүй", tc.meta, want)
+		}
+	}
+}
