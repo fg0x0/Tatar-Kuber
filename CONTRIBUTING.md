@@ -60,6 +60,27 @@ This is the recommended first contribution. See `docs/03-Scanner-Adapter-Interfa
 tatar-kuber verify-lab --input scan-result.json --expected expected-findings.json
 ```
 
+### The golden corpus
+
+`testdata/golden/demo.json` freezes the full pipeline output for the real scanner output in
+`examples/demo/`. It runs on every PR in about a tenth of a second — no cluster, no network.
+
+Its job is the failure this project keeps hitting: a mapping that breaks **silently**. In v1.0.0
+Trivy contributed nothing for an entire release while the totals looked healthy. The golden test
+catches exactly that, because it compares per-scanner contribution, not just the total.
+
+If you change a mapping, a severity, dedup, rollup or scoring, this test will fail. **Read the
+diff it prints before regenerating** — it reports which findings appeared, disappeared or changed
+severity, and how each scanner's contribution moved, rather than dumping the JSON. Every line is
+either an improvement you meant or a regression you didn't.
+
+```bash
+go test ./internal/cli/ -run TestGolden            # check
+go test ./internal/cli/ -run TestGolden -update    # accept, once you have read the diff
+```
+
+Regenerating without reading the diff makes the guard worthless.
+
 ## Code style
 
 - `gofmt` + `go vet` clean; small, well-named functions; comments where non-obvious.
