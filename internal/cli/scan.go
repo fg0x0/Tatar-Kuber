@@ -46,12 +46,23 @@ func cmdScan(args []string) int {
 
 	if *rawDir != "" {
 		// Offline ingest: цуглуулсан raw-г нэгтгэнэ.
+		//
+		// scan_mode="offline" — mode хувьсагчийг ДАМЖУУЛАХГҮЙ. v1.0.2 хүртэл
+		// офлайн ingest нь "remote" гэж тайлагнагддаг байсан (mode нь зөвхөн -f
+		// байгаа эсэхээр шийдэгддэг тул): cluster руу огт хандаагүй атлаа
+		// "амьд кластерын scan" гэж зарладаг байв. Хоёр хор: (1) тайлан өөрийн
+		// гарал үүслийг худал хэлнэ, (2) diff-ийн mode_mismatch хамгаалалт
+		// амьд scan ба офлайн ingest-ийг ялгаж чадахгүй болно.
+		//
+		// "offline" гэдэг нь ҮНЭН мэдэгдэл: scanner-ыг бид ажиллуулаагүй, урьд
+		// цуглуулсан гаралтыг уншсан. Тэр гаралт нь анх local эсвэл remote
+		// горимоор цуглуулагдсаныг энэ давхаргаас МЭДЭХ БОЛОМЖГҮЙ тул таамаглахгүй.
 		raws, inv, err := loadRawDir(*rawDir)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "алдаа:", err)
 			return 2
 		}
-		r, err := p.Process(raws, orchestrator.Meta{ClusterName: *cluster, ScanMode: mode, Lang: *lang, Inventory: inv, NoRollup: *noRollup})
+		r, err := p.Process(raws, orchestrator.Meta{ClusterName: *cluster, ScanMode: "offline", Lang: *lang, Inventory: inv, NoRollup: *noRollup})
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "алдаа:", err)
 			return 2

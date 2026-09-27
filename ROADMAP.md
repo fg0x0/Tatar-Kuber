@@ -54,17 +54,38 @@ same audit method was turned on the mapping registry itself.
   `rand.SafeEncodeString`'s vowel-free alphabet — so `api-598c4dc6b8-ldjqq` rolls up to `api`,
   `api-canary` does not. Moved pods stay in the evidence, counts appear in `metadata.rollup`, and
   `--no-rollup` disables it.
-- **Scan trending / diff** (v1.0.3) — `diff --old a.json --new b.json` compares two scans by
-  the stable finding ID: new / fixed / worsened / improved / unchanged, per-severity and score
-  deltas, `--fail-on-new <severity>` for CI, and text or JSON output. Because a lower count is
-  not always good news, it also diffs `metadata.scanner_runs`: a scanner that used to produce
-  findings and now produces none is flagged **COVERAGE REGRESSED** rather than read as "fixed".
-  Comparisons that cannot be trusted — different cluster, different mode, one side scanned with
-  `--no-rollup` — are called out as warnings instead of silently producing a misleading diff.
 - **Correctness fixes** (v1.0.2) — namespace asset context is token-matched (`non-production` is no
   longer scored as production), blind-shot rules are validated at registry load, never-matched
   suppressions and policy rules naming unknown controls are reported, and SARIF findings with a
   file path emit a real file:line location.
+
+---
+
+## v1.0.3 — Trending & honest provenance ✅ (shipped)
+
+Theme: **an audit is not a one-off, and a report must not misstate how it was produced.**
+
+- **Scan trending / diff** — `diff --old a.json --new b.json` compares two scans by the stable
+  finding ID: new / fixed / worsened / improved / unchanged, per-severity and score deltas,
+  `--fail-on-new <severity>` for CI, and text or JSON output. Because a lower count is not
+  always good news, it also diffs `metadata.scanner_runs`: a scanner that used to produce
+  findings and now produces none is flagged **COVERAGE REGRESSED** rather than read as "fixed".
+  Comparisons that cannot be trusted — different cluster, different mode, one side scanned with
+  `--no-rollup` — are called out as warnings instead of silently producing a misleading diff.
+- **Language moved from scan to report** — `report --lang en|mn` renders either language from
+  one `scan-result.json`, so a second language no longer means re-running the scanners and
+  hitting the cluster again. It applies to JSON, SARIF and HTML alike, leaves the source file
+  untouched (so `metadata.result_hash` stays valid), and refuses a language the registry does
+  not carry instead of silently falling back to English.
+- **`scan_mode` tells the truth** — an offline `--raw-dir` ingest reported itself as `remote`,
+  claiming a live cluster scan it never performed. It is now `offline`, which also restores
+  `diff`'s mode-mismatch warning between a live scan and a replayed one.
+- **Version drift guard** — `metadata.tatar_version` comes from a constant that release tooling
+  cannot inject, so a release could ship a binary reporting one version and writing another
+  into every report and SARIF file. A test now fails when the two disagree.
+- **Daily scanner guard** — the live and static workflows run every day instead of weekly, and
+  an installer outage no longer sinks the whole run: each install retries, and a scanner that
+  still fails is surfaced as `unavailable` while the rest of the scan proceeds.
 
 ---
 
@@ -202,17 +223,38 @@ v1.0.0-ийн бодит live run-ыг аудит хийхэд 11 finding бүг
   `rand.SafeEncodeString`-ийн эгшиггүй алфавитын дагавар нэмсэн байх ёстой — тиймээс
   `api-598c4dc6b8-ldjqq` нь `api` руу зөөгдөнө, `api-canary` зөөгдөхгүй. Зөөгдсөн pod нотолгоонд
   үлдэнэ, тоо нь `metadata.rollup`-д гарна, `--no-rollup`-аар болино.
-- **Scan trending / diff** (v1.0.3) — `diff --old a.json --new b.json` нь хоёр scan-ыг
-  тогтвортой finding ID-гаар тулгана: шинэ / зассан / дордсон / сайжирсан / хэвээр, severity
-  тус бүрийн ба онооны зөрүү, CI-д `--fail-on-new <severity>`, text эсвэл JSON гаралт. Тоо
-  буурсан нь үргэлж сайн мэдээ биш тул `metadata.scanner_runs`-ыг мөн тулгана: өмнө finding
-  өгч байсан scanner одоо 0 өгвөл **ХАМРАХ ХҮРЭЭ БУУРСАН** гэж тэмдэглэнэ, "зассан" гэж
-  уншигдахгүй. Итгэх боломжгүй харьцуулалтыг (өөр cluster, өөр горим, нэг тал нь
-  `--no-rollup`) чимээгүй өнгөрөөхгүй, анхааруулга болгож хэлнэ.
 - **Зөв байдлын засварууд** (v1.0.2) — namespace-ийн asset context token-оор тулгагдана
   (`non-production` нь production гэж үнэлэгдэхээ болив), blind-shot rule нь registry уншихад
   шалгагдана, юунд ч таараагүй suppression ба байхгүй control нэрлэсэн бодлогын rule мэдээлэгдэнэ,
   файлын зам агуулсан SARIF finding нь бодит file:line гаргана.
+
+---
+
+## v1.0.3 — Тренд ба үнэн гарал үүсэл ✅ (гарсан)
+
+Сэдэв: **аудит бол нэг удаагийн ажил биш, мөн тайлан өөрийн гарал үүслээ худал хэлж болохгүй.**
+
+- **Scan trending / diff** — `diff --old a.json --new b.json` нь хоёр scan-ыг тогтвортой
+  finding ID-гаар тулгана: шинэ / зассан / дордсон / сайжирсан / хэвээр, severity тус бүрийн
+  ба онооны зөрүү, CI-д `--fail-on-new <severity>`, text эсвэл JSON гаралт. Тоо буурсан нь
+  үргэлж сайн мэдээ биш тул `metadata.scanner_runs`-ыг мөн тулгана: өмнө finding өгч байсан
+  scanner одоо 0 өгвөл **ХАМРАХ ХҮРЭЭ БУУРСАН** гэж тэмдэглэнэ, "зассан" гэж уншигдахгүй.
+  Итгэх боломжгүй харьцуулалтыг (өөр cluster, өөр горим, нэг тал нь `--no-rollup`) чимээгүй
+  өнгөрөөхгүй, анхааруулга болгож хэлнэ.
+- **Хэл scan-аас report руу шилжив** — `report --lang en|mn` нь нэг `scan-result.json`-оос аль
+  ч хэлээр гаргана; хоёр дахь хэлийн төлөө scanner-уудыг дахин ажиллуулж, cluster руу дахин
+  хандах шаардлагагүй болов. JSON, SARIF, HTML гурвуулд үйлчилнэ, эх файлыг хөндөхгүй тул
+  `metadata.result_hash` хүчинтэй хэвээр, мөн registry-д байхгүй хэлийг чимээгүй англи руу
+  унагахгүй, шууд хэлнэ.
+- **`scan_mode` үнэнээ хэлдэг болов** — `--raw-dir` офлайн ingest нь өөрийгөө `remote` гэж
+  зарлаж, хийгээгүй амьд кластерын scan-ыг хийсэн мэт харуулдаг байв. Одоо `offline` болсноор
+  `diff`-ийн горим зөрүүгийн анхааруулга амьд scan ба дахин тоглуулсныг ялгадаг боллоо.
+- **Хувилбар зөрөхөөс хамгаалах** — `metadata.tatar_version` нь release хэрэгслийн хүрдэггүй
+  const-оос ирдэг тул нэг хувилбар хэлж, тайлан бүрт өөр хувилбар бичдэг binary гарах
+  боломжтой байв. Одоо хоёр нь зөрвөл тест унана.
+- **Өдөр тутмын scanner хамгаалалт** — амьд ба статик workflow долоо хоног тутмын оронд өдөр
+  бүр ажиллана; суулгагчийн саатал бүхэл run-ыг унагахаа болив: суулгалт бүр дахин оролдоно,
+  тэгсэн ч бүтэхгүй scanner нь `unavailable` гэж гарч, үлдсэн scan үргэлжилнэ.
 
 ---
 

@@ -6,7 +6,7 @@
       "tool": {
         "driver": {
           "name": "TATAR-Kuber",
-          "version": "1.0.2",
+          "version": "1.0.3",
           "informationUri": "https://github.com/ochmunkh/tatar-kuber",
           "rules": [
             {

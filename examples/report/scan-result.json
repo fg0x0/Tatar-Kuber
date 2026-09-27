@@ -1,11 +1,11 @@
 {
   "schema_version": "1.0",
   "metadata": {
-    "scan_id": "b972931af2505666163f61bc235f1fb0",
+    "scan_id": "d7a05c0c3bb9044e10332eb0d63ee217",
     "cluster_name": "demo-prod",
-    "scan_mode": "remote",
+    "scan_mode": "offline",
     "lang": "en",
-    "tatar_version": "1.0.2",
+    "tatar_version": "1.0.3",
     "scanner_versions": {
       "checkov": "3.2.10",
       "kubescape": "3.1.4",
@@ -60,8 +60,8 @@
         "latest-app-598c4dc6b8-ldjqq"
       ]
     },
-    "started_at": "2026-09-07T11:25:39Z",
-    "finished_at": "2026-09-07T11:25:39Z",
+    "started_at": "2026-09-27T11:21:49Z",
+    "finished_at": "2026-09-27T11:21:49Z",
     "result_hash": "sha256:c887c5d96de4e6df3f92691840c967e212515219213f4f225e50f6862c597b6a",
     "inventory": {
       "ClusterRoles": 27,
@@ -171,8 +171,8 @@
         "contribution": 18
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "references": [
         "CVE-2024-0001",
         "https://avd.aquasec.com/nvd/cve-2024-0001"
@@ -216,8 +216,8 @@
         }
       ],
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "kubescape",
@@ -264,8 +264,8 @@
         }
       ],
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -305,8 +305,8 @@
         "contribution": 12.6
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -357,8 +357,8 @@
         }
       ],
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -405,8 +405,8 @@
         }
       ],
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -447,8 +447,8 @@
         "contribution": 12.6
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "references": [
         "CVE-2024-0002",
         "https://avd.aquasec.com/nvd/cve-2024-0002"
@@ -499,8 +499,8 @@
         }
       ],
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -547,8 +547,8 @@
         }
       ],
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -588,8 +588,8 @@
         "contribution": 12.6
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -633,8 +633,8 @@
         "contribution": 12.6
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -685,8 +685,8 @@
         }
       ],
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -739,8 +739,8 @@
         }
       ],
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "references": [
         "https://avd.aquasec.com/misconfig/ksv017",
         "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-15"
@@ -799,8 +799,8 @@
         }
       ],
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -847,8 +847,8 @@
         }
       ],
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -888,8 +888,8 @@
         "contribution": 12.6
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -933,8 +933,8 @@
         "contribution": 12.6
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -985,8 +985,8 @@
         }
       ],
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "trivy",
@@ -1033,8 +1033,8 @@
         }
       ],
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -1074,8 +1074,8 @@
         "contribution": 7
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -1127,8 +1127,8 @@
         "contribution": 5.4
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -1168,8 +1168,8 @@
         "contribution": 5.4
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -1209,8 +1209,8 @@
         "contribution": 5.4
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -1257,8 +1257,8 @@
         }
       ],
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -1305,8 +1305,8 @@
         }
       ],
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -1346,8 +1346,8 @@
         "contribution": 5.4
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -1387,8 +1387,8 @@
         "contribution": 5.4
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -1428,8 +1428,8 @@
         "contribution": 5.4
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -1469,8 +1469,8 @@
         "contribution": 5.4
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -1510,8 +1510,8 @@
         "contribution": 5.4
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -1551,8 +1551,8 @@
         "contribution": 5.4
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -1592,8 +1592,8 @@
         "contribution": 5.4
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -1633,8 +1633,8 @@
         "contribution": 5.4
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -1674,8 +1674,8 @@
         "contribution": 5.4
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -1715,8 +1715,8 @@
         "contribution": 5.4
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "trivy",
@@ -1756,8 +1756,8 @@
         "contribution": 5.4
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -1816,8 +1816,8 @@
         }
       ],
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -1868,8 +1868,8 @@
         }
       ],
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -1909,8 +1909,8 @@
         "contribution": 5.4
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -1950,8 +1950,8 @@
         "contribution": 5.4
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -1998,8 +1998,8 @@
         }
       ],
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -2040,8 +2040,8 @@
         }
       ],
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "kubescape",
@@ -2081,8 +2081,8 @@
         "contribution": 5.4
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -2122,8 +2122,8 @@
         "contribution": 5.4
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -2163,8 +2163,8 @@
         "contribution": 5.4
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -2204,8 +2204,8 @@
         "contribution": 5.4
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -2252,8 +2252,8 @@
         }
       ],
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -2294,8 +2294,8 @@
         "contribution": 5.4
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "popeye",
@@ -2335,8 +2335,8 @@
         "contribution": 5.4
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -2382,8 +2382,8 @@
         }
       ],
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -2429,8 +2429,8 @@
         }
       ],
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -2476,8 +2476,8 @@
         }
       ],
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -2523,8 +2523,8 @@
         }
       ],
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -2570,8 +2570,8 @@
         }
       ],
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -2611,8 +2611,8 @@
         "contribution": 1.8
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -2652,8 +2652,8 @@
         "contribution": 1.8
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -2705,8 +2705,8 @@
         "contribution": 1.8
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -2746,8 +2746,8 @@
         "contribution": 1.8
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -2787,8 +2787,8 @@
         "contribution": 1.8
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -2828,8 +2828,8 @@
         "contribution": 1.8
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -2869,8 +2869,8 @@
         "contribution": 1.8
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -2910,8 +2910,8 @@
         "contribution": 1.8
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -2963,8 +2963,8 @@
         "contribution": 1.8
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -3004,8 +3004,8 @@
         "contribution": 1.8
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -3057,8 +3057,8 @@
         "contribution": 1.8
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -3098,8 +3098,8 @@
         "contribution": 1.8
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -3139,8 +3139,8 @@
         "contribution": 1.8
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -3192,8 +3192,8 @@
         "contribution": 1.8
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -3237,8 +3237,8 @@
         "contribution": 1.8
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -3290,8 +3290,8 @@
         "contribution": 1.8
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -3347,8 +3347,8 @@
         "contribution": 1.8
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -3388,8 +3388,8 @@
         "contribution": 1.8
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -3441,8 +3441,8 @@
         "contribution": 1.8
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "checkov",
@@ -3482,8 +3482,8 @@
         "contribution": 0
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "popeye",
@@ -3523,8 +3523,8 @@
         "contribution": 0
       },
       "status": "OPEN",
-      "first_seen": "2026-09-07T11:25:39Z",
-      "last_seen": "2026-09-07T11:25:39Z",
+      "first_seen": "2026-09-27T11:21:49Z",
+      "last_seen": "2026-09-27T11:21:49Z",
       "raw_refs": [
         {
           "scanner": "popeye",

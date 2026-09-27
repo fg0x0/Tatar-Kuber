@@ -151,7 +151,7 @@ type ScanResult struct {
 type Metadata struct {
 	ScanID          string            `json:"scan_id"`
 	ClusterName     string            `json:"cluster_name"`
-	ScanMode        string            `json:"scan_mode"`      // local | remote
+	ScanMode        string            `json:"scan_mode"`      // local (-f манифест) | remote (амьд cluster) | offline (--raw-dir ingest)
 	Lang            string            `json:"lang,omitempty"` // тайлангийн хэл: en | mn
 	TatarVersion    string            `json:"tatar_version"`
 	ScannerVersions map[string]string `json:"scanner_versions"`

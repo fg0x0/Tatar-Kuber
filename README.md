@@ -7,8 +7,8 @@
 ![Output](https://img.shields.io/badge/output-JSON%20%C2%B7%20SARIF%20%C2%B7%20HTML-1F6F54)
 [![CI](https://github.com/ochmunkh/Tatar-Kuber/actions/workflows/ci.yml/badge.svg)](https://github.com/ochmunkh/Tatar-Kuber/actions/workflows/ci.yml)
 [![Real cluster](https://github.com/ochmunkh/Tatar-Kuber/actions/workflows/real-cluster.yml/badge.svg)](https://github.com/ochmunkh/Tatar-Kuber/actions/workflows/real-cluster.yml)
-![Tests](https://img.shields.io/badge/tests-16%20packages%20green-brightgreen)
-![Release](https://img.shields.io/badge/release-v1.0.2-brightgreen)
+![Tests](https://img.shields.io/badge/tests-17%20packages%20green-brightgreen)
+![Release](https://img.shields.io/badge/release-v1.0.3-brightgreen)
 
 **Kubernetes security posture assessment framework — one command, four scanners, one standard report.**
 
@@ -200,7 +200,7 @@ sources → scanners (parallel) → normalize → canonical + dedup → blind-sh
 ```bash
 go build ./...
 go test ./...          # 16 packages, all green
-./scripts/build.sh 1.0.2
+./scripts/build.sh 1.0.3
 ```
 
 ## CLI
@@ -237,9 +237,10 @@ Adapter Interface, 04 Severity & Risk Scoring, 05 CLI Spec, 06 Repository Struct
 
 ## Status
 
-**v1.0.2** — Live Mode B (parallel adapters) · explainable risk · CI/CD gatekeeper
-(policy + GitHub Action + SARIF) · goreleaser + brew/curl/Docker · **scanner coverage report** ·
-**Pod → controller rollup**.
+**v1.0.3** — Live Mode B (parallel adapters) · explainable risk · CI/CD gatekeeper
+(policy + GitHub Action + SARIF) · goreleaser + brew/curl/Docker · scanner coverage report ·
+Pod → controller rollup · **scan trending (`diff`)** · **`report --lang` — one scan, either
+language** · **honest `scan_mode`**.
 
 **Honesty note (v1.0.1).** Auditing the v1.0.0 live run showed that all 11 findings came from
 Kubescape alone: Trivy was silently contributing nothing (real Trivy emits `AVD-KSV-0017`, the
@@ -342,6 +343,21 @@ This is the v1.0.0 failure mode turned into a check. Comparisons that cannot be 
 different cluster, a different mode, or one side scanned with `--no-rollup` (which changes
 `resource` and therefore every ID) — are reported as warnings instead of silently producing a
 misleading diff.
+
+**v1.0.3 — one scan, either language.** Language used to be chosen at *scan* time and baked into
+`scan-result.json`, so handing the same audit to an English reader and a Mongolian one meant
+running the scanners twice against the cluster. `report --lang en|mn` moves the choice to where
+it belongs — the output — and renders either language from one result file. It applies to JSON,
+SARIF and HTML alike, never rewrites the source file (so `metadata.result_hash` stays verifiable),
+and refuses a language the registry does not carry rather than quietly falling back to English.
+
+**v1.0.3 — `scan_mode` stops lying.** An offline `--raw-dir` ingest labelled itself `remote`,
+so a report produced without ever contacting a cluster claimed to be a live cluster scan. For an
+audit artifact that is a provenance error, and it also blinded `diff`: a live scan and a replayed
+one both read as `remote`, so the mode-mismatch warning could never fire between them. Offline
+ingest is now `offline`. Relatedly, `metadata.tatar_version` comes from a constant that release
+tooling cannot inject, so a release could ship a binary that reports one version and writes
+another into every report — a test now fails when the two disagree.
 
 Where it's headed — v2 (audit-grade PDF + compliance mapping + trending), v3 (continuous +
 dashboard): see the [**Roadmap**](ROADMAP.md).
@@ -549,7 +565,7 @@ docker run --rm -v "$PWD:/work" -w /work ghcr.io/ochmunkh/tatar-kuber:latest sca
 ```bash
 go build ./...
 go test ./...          # 16 багц, бүгд ногоон
-./scripts/build.sh 1.0.2
+./scripts/build.sh 1.0.3
 ```
 
 ### Баримт бичиг
@@ -564,9 +580,10 @@ Adapter Interface, 04 Severity & Risk Scoring, 05 CLI Spec, 06 Repository Struct
 
 ### Төлөв
 
-**v1.0.2** — Live Mode B (parallel adapters) · тайлбарлагдах эрсдэл · CI/CD gatekeeper
-(бодлого + GitHub Action + SARIF) · goreleaser + brew/curl/Docker · **scanner хамрах хүрээний тайлан** ·
-**Pod → controller rollup**.
+**v1.0.3** — Live Mode B (parallel adapters) · тайлбарлагдах эрсдэл · CI/CD gatekeeper
+(бодлого + GitHub Action + SARIF) · goreleaser + brew/curl/Docker · scanner хамрах хүрээний тайлан ·
+Pod → controller rollup · **тренд (`diff`)** · **`report --lang` — нэг scan, аль ч хэл** ·
+**үнэн `scan_mode`**.
 
 **Шударга тэмдэглэл (v1.0.1).** v1.0.0-ийн live run-ыг аудит хийхэд 11 finding бүгд зөвхөн
 Kubescape-ээс ирсэн нь тогтоогдсон: Trivy чимээгүй юу ч өгөөгүй (бодит Trivy `AVD-KSV-0017`
@@ -670,6 +687,21 @@ code өгнө, `-o json` нь машин уншигдах зөрүү.
 v1.0.0-ийн алдааг шалгалт болгож хувиргасан хэрэг. Итгэх боломжгүй харьцуулалтыг — өөр cluster,
 өөр горим, эсвэл нэг тал нь `--no-rollup`-аар (энэ нь `resource`-ыг, улмаар ID бүрийг өөрчилдөг) —
 чимээгүй өнгөрөөхгүй, анхааруулга болгож гаргана.
+
+**v1.0.3 — нэг scan, аль ч хэл.** Хэл нь *scan* хийх үед сонгогдож `scan-result.json` дотор
+шатдаг байсан тул нэг аудитыг англи уншигч, монгол уншигч хоёрт өгөхийн тулд scanner-уудыг
+cluster дээр хоёр удаа ажиллуулах хэрэгтэй байв. `report --lang en|mn` нь сонголтыг харьяалагдах
+газар нь — гаралт руу — шилжүүлж, нэг үр дүнгийн файлаас аль ч хэлээр гаргана. JSON, SARIF, HTML
+гурвуулд үйлчилнэ, эх файлыг хэзээ ч дарж бичихгүй (тиймээс `metadata.result_hash` шалгагдах
+хэвээр), мөн registry-д байхгүй хэлийг чимээгүй англи руу унагахгүй, шууд татгалзана.
+
+**v1.0.3 — `scan_mode` худал хэлэхээ болив.** `--raw-dir` офлайн ingest нь өөрийгөө `remote` гэж
+тэмдэглэдэг байсан тул cluster руу огт хандаагүй тайлан "амьд кластерын scan" гэж зарладаг байв.
+Аудитын артефактад энэ бол гарал үүслийн алдаа, мөн `diff`-ийг сохолдог: амьд scan ба дахин
+тоглуулсан хоёр хоёулаа `remote` тул горим зөрүүгийн анхааруулга тэдний хооронд хэзээ ч хөөрөх
+боломжгүй байв. Одоо офлайн ingest нь `offline`. Үүнтэй холбоотойгоор `metadata.tatar_version` нь
+release хэрэгслийн хүрдэггүй const-оос ирдэг тул нэг хувилбар хэлж, тайлан бүрт өөр хувилбар
+бичдэг binary гарах боломжтой байсан — одоо хоёр нь зөрвөл тест унана.
 
 Хаашаа явж байгаа — v2 (аудитын PDF + compliance mapping + trending), v3 (тасралтгүй +
 dashboard): [**Замын зураг**](ROADMAP.md)-г үз.

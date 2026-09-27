@@ -204,3 +204,26 @@ func TestCLI_ReportLangSwitchesWithoutRescan(t *testing.T) {
 		t.Errorf("--lang de exit=%d, want 3", code)
 	}
 }
+
+// Офлайн ingest нь өөрийгөө "remote" гэж зарлаж байсан: cluster руу огт
+// хандаагүй атлаа "амьд кластерын scan" гэсэн тайлан гаргадаг байв (v1.0.2-т
+// mode нь ЗӨВХӨН -f байгаа эсэхээр шийдэгддэг, --raw-dir салаа түүнийг дамжуулдаг
+// байсан). Хоёр хор: тайлан гарал үүслээ худал хэлнэ, мөн diff-ийн
+// mode_mismatch хамгаалалт амьд scan ба офлайн ingest-ийг ялгаж чадахгүй болно.
+func TestCLI_RawDirScanIsOffline(t *testing.T) {
+	out := t.TempDir()
+	if code := cmdScan([]string{"--raw-dir", "../../examples/demo", "--cluster", "mode", "-o", out}); code != 0 {
+		t.Fatalf("scan exit=%d", code)
+	}
+	var res finding.ScanResult
+	b, err := os.ReadFile(filepath.Join(out, "scan-result.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(b, &res); err != nil {
+		t.Fatal(err)
+	}
+	if res.Metadata.ScanMode != "offline" {
+		t.Errorf("scan_mode=%q, want offline (--raw-dir нь scanner ажиллуулдаггүй)", res.Metadata.ScanMode)
+	}
+}

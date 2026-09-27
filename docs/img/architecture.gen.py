@@ -56,7 +56,7 @@ h1 span{color:#1F6F54}
 T = {
  "en": dict(
   lang="en", title="architecture",
-  sub='v1.0.2 — parallel · live/offline · explainable risk · CI gate · SARIF · bilingual · <b>scanner accountability</b>',
+  sub='v1.0.3 — parallel · live/offline · explainable risk · CI gate · SARIF · bilingual · scanner accountability · <b>trending (diff)</b>',
   lg_core="Core", lg_t1="Tier 1 (v1.0.0)", lg_new="v1.0.2 — accountability",
   s_src="Sources", s_scan="Scanners — parallel",
   scan_note="concurrent + per-scanner timeout + graceful degrade",
@@ -90,7 +90,7 @@ T = {
  ),
  "mn": dict(
   lang="mn", title="архитектур",
-  sub='v1.0.2 — зэрэгцээ · амьд/офлайн · тайлбарлагдах эрсдэл · CI gate · SARIF · хоёр хэлт · <b>scanner-ийн шударга байдал</b>',
+  sub='v1.0.3 — зэрэгцээ · амьд/офлайн · тайлбарлагдах эрсдэл · CI gate · SARIF · хоёр хэлт · scanner-ийн шударга байдал · <b>тренд (diff)</b>',
   lg_core="Цөм (core)", lg_t1="Tier 1 (v1.0.0)", lg_new="v1.0.2 — шударга байдал",
   s_src="Sources — эх сурвалж", s_scan="Scanner-ууд — зэрэг",
   scan_note="зэрэгцээ + scanner тус бүрийн timeout + graceful degrade",

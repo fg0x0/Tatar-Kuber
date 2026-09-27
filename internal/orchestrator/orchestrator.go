@@ -21,7 +21,15 @@ import (
 	"github.com/ochmunkh/tatar-kuber/internal/scanner"
 )
 
-const tatarVersion = "1.0.2"
+// Version — scan-result.json-ийн metadata.tatar_version ба SARIF-ийн
+// driver.version-д бичигдэх хувилбар.
+//
+// АНХААР: энэ бол const — goreleaser-ийн ldflags ЗӨВХӨН cli.Version-ыг оруулдаг
+// (-X .../internal/cli.Version=...), эндэхийг хүрдэггүй. Тиймээс release бүрт
+// ГАРААР шинэчилнэ, эс бөгөөс `tatar-kuber version` шинэ хувилбар хэлэх атлаа
+// тайлан бүр хуучин хувилбараар өөрийгөө танилцуулна — аудитын артефактад
+// гарал үүслийн алдаа. Хоёрын зөрүүг TestVersionsAgree барина.
+const Version = "1.0.3"
 
 // Pipeline — scanner-агностик цөм.
 type Pipeline struct {
@@ -48,7 +56,7 @@ func (p *Pipeline) Adapters() []scanner.ScannerAdapter { return p.adapters }
 // Meta — scan-ий тодорхойлолт.
 type Meta struct {
 	ClusterName string
-	ScanMode    string               // local | remote
+	ScanMode    string               // local (-f манифест) | remote (амьд cluster) | offline (--raw-dir ingest)
 	Lang        string               // тайлангийн хэл: en (default) | mn
 	Inventory   map[string]int       // cluster объектын тоо (сонголт)
 	Runs        []finding.ScannerRun // Collect-оос ирсэн scanner явц (сонголт; Process баяжуулна)
@@ -243,7 +251,7 @@ func (p *Pipeline) Process(raws []scanner.RawResult, m Meta) (finding.ScanResult
 			ClusterName:     m.ClusterName,
 			ScanMode:        m.ScanMode,
 			Lang:            lang,
-			TatarVersion:    tatarVersion,
+			TatarVersion:    Version,
 			ScannerVersions: versions,
 			StartedAt:       started.Format(time.RFC3339),
 			FinishedAt:      time.Now().UTC().Format(time.RFC3339),
