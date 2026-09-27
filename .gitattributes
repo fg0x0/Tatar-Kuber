@@ -1,0 +1,25 @@
+# Мөрийн төгсгөлийг repo дотор ҮРГЭЛЖ LF байлгана.
+#
+# Windows дээр core.autocrlf=true тул ажлын хуулбарт CRLF болж, `gofmt -l` нь
+# эрүүл файлуудыг "форматлагдаагүй" гэж заадаг байв (index нь LF хэвээр —
+# git ls-files --eol: i/lf w/crlf). Хуурамч дохио нь жинхэнэ дохиог нуудаг.
+#
+# Shell script-д энэ нь зүгээр гоо сайхны асуудал биш: CRLF-тэй install.sh
+# Linux дээр "bad interpreter" гэж унана.
+
+*.go        text eol=lf
+*.sh        text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.json      text eol=lf
+*.md        text eol=lf
+*.mod       text eol=lf
+*.sum       text eol=lf
+Dockerfile* text eol=lf
+
+# Хоёртын файлыг git хөрвүүлэхийг оролдож эвдэхээс сэргийлнэ.
+*.png  binary
+*.jpg  binary
+*.docx binary
+*.pptx binary
+*.pdf  binary
