@@ -120,9 +120,10 @@ hand-written notes seconds after they were applied.
 One subtlety worth knowing: for a tag push, GitHub reads the workflow file **from the
 commit the tag points at**, not from `master`. So a `v1` still pointing at a release
 made before this fix will trigger the old `v*` workflow no matter what `master` says.
-It corrects itself at the next release, when `v1` moves onto a commit that carries the
-narrowed filter. Until then, leave `v1` alone; if a run does fire, cancel it before it
-reaches the release step.
+`v1` has since been moved onto a commit that carries the narrowed filter, so moving it
+again reads the new rule and no longer fires. If you ever point `v1` at a release made
+before this fix, the old behaviour comes back — cancel the run before it reaches the
+release step, then re-apply the notes.
 
 Finally — **download the published binary and run it**. v1.0.0 shipped working code
 in a broken artifact; the only way to know is to fetch the release and exercise

@@ -235,6 +235,11 @@ The action produces a SARIF file; upload it with `github/codeql-action/upload-sa
 Six engineering documents in `docs/` (01 Unified Schema, 02 Canonical Mapping, 03 Scanner
 Adapter Interface, 04 Severity & Risk Scoring, 05 CLI Spec, 06 Repository Structure).
 
+**[`docs/coverage.md`](docs/coverage.md)** — what the tool actually checks: every canonical
+control against every scanner, generated from the registry and kept in step with it by a
+test. Controls that no rule maps to are listed as **not checked** rather than quietly
+counted. Today that is 1 of 33.
+
 ## Status
 
 **v1.0.3** — Live Mode B (parallel adapters) · explainable risk · CI/CD gatekeeper
@@ -572,6 +577,11 @@ go test ./...          # 16 багц, бүгд ногоон
 
 `docs/` дотор 6 инженерийн баримт (01 Unified Schema, 02 Canonical Mapping, 03 Scanner
 Adapter Interface, 04 Severity & Risk Scoring, 05 CLI Spec, 06 Repository Structure).
+
+**[`docs/coverage.md`](docs/coverage.md)** — хэрэгсэл юуг ҮНЭХЭЭР шалгадгийг харуулна:
+canonical control бүрийг scanner бүртэй тулгасан матриц. Registry-ээс үүсдэг бөгөөд тестээр
+нийцлийг нь барина. Ямар ч rule зураглагдаагүй control-ыг "шалгагддаггүй" гэж ил гаргана —
+33-аас 1 нь.
 
 ### Туршилтын лаборатори
 
