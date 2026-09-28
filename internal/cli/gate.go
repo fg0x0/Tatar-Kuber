@@ -5,8 +5,10 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
+	"github.com/ochmunkh/tatar-kuber/internal/diff"
 	"github.com/ochmunkh/tatar-kuber/internal/finding"
 	"github.com/ochmunkh/tatar-kuber/internal/policy"
 )
@@ -21,6 +23,7 @@ func cmdGate(args []string) int {
 	policyPath := fs.String("policy", ".tatar-kuber.yaml", "бодлогын файл")
 	failOn := fs.String("fail-on", "", "severity босго (файлыг дарна): critical|high|medium|low")
 	minScore := fs.Int("min-score", 0, "cluster score доод хязгаар (файлыг дарна; 0 = хэрэгсэхгүй)")
+	baseline := fs.String("baseline", "", "өмнөх scan-result.json — зөвхөн ШИНЭ ба ДОРДСОН олдворт унана")
 	_ = fs.Parse(args)
 	// Флагийг ЗӨВХӨН хэрэглэгч тодорхой өгсөн үед policy файлыг дарна. Өмнө нь
 	// default утга (--min-score 0, action.yml-ийн --fail-on high) файлын утгыг
@@ -55,6 +58,19 @@ func cmdGate(args []string) int {
 	}
 
 	r := pol.Evaluate(res, time.Now())
+
+	// --baseline: аль хэдийн байсан асуудлыг унагахгүй, ЗӨВХӨН шинэ ба дордсоныг
+	// босгонд тооцно. Багууд эхний өдөр 200 олдвортой танилцахдаа gate-ээ
+	// унтраахаас сэргийлэх зорилготой — унтраасан gate бол gate биш.
+	baselineNote := ""
+	if *baseline != "" {
+		note, code := applyBaseline(&r, pol, res, *baseline)
+		if code != 0 {
+			return code
+		}
+		baselineNote = note
+	}
+
 	// Suppression-ууд хүчинтэй canonical control руу заасан эсэхийг registry-тэй тулгана.
 	if regPath, err := resolveRegistry(""); err == nil {
 		if reg, err := loadRegistry(regPath); err == nil {
@@ -70,7 +86,11 @@ func cmdGate(args []string) int {
 	if r.MinScore > 0 {
 		fmt.Printf("  min_score=%d", r.MinScore)
 	}
-	fmt.Printf("  (suppressed=%d)\n\n", len(r.Suppressed))
+	fmt.Printf("  (suppressed=%d)", len(r.Suppressed))
+	if baselineNote != "" {
+		fmt.Printf("  %s", baselineNote)
+	}
+	fmt.Printf("\n\n")
 
 	for _, s := range r.InvalidRules {
 		fmt.Fprintf(os.Stderr, "анхаар: suppression '%s' expires формат буруу (%s) — YYYY-MM-DD байх ёстой\n", s.Control, s.Expires)
@@ -127,4 +147,82 @@ func joinReasons(rs []string) string {
 		out += r
 	}
 	return out
+}
+
+// ── baseline ────────────────────────────────────────────────────────────────
+
+// baselineUntrusted — эдгээр анхааруулга гарвал "шинэ" гэсэн олонлог утгагүй
+// болно: өөр cluster, өөр горим, нэг тал нь --no-rollup (resource өөрчлөгдөж
+// ID бүр зөрнө), эсвэл схем зөрсөн. Ийм үед baseline-ыг ХЭРЭГСЭХГҮЙ — аюулгүй
+// байдлын gate эргэлзээтэй үедээ ХААЛТТАЙ талдаа унах ёстой.
+var baselineUntrusted = map[string]bool{
+	"cluster_mismatch": true, "mode_mismatch": true,
+	"rollup_mismatch": true, "schema_mismatch": true,
+}
+
+// applyBaseline — r.Violations-аас baseline-д аль хэдийн байсан олдворуудыг
+// хасна. Дордсон (severity өссөн) олдвор ҮЛДЭНЭ: LOW нь CRITICAL болоход
+// "хуучин асуудал" гэж чимээгүй өнгөрөх нь яг энэ хэрэгслийн эсэргүүцдэг зүйл.
+//
+// Suppression-ий бүртгэлийг (хугацаа дууссан / тохироогүй дүрэм) БҮТЭН олдворын
+// жагсаалт дээр тооцсон хэвээр үлдээнэ — эс бөгөөс baseline-д байсан finding-ийг
+// хаадаг дүрэм бүр "ямар ч олдворт тохироогүй" гэж худал анхааруулагдана.
+func applyBaseline(r *policy.Result, pol policy.Policy, res finding.ScanResult, path string) (string, int) {
+	base, code := loadScan(path)
+	if code != 0 {
+		return "", code
+	}
+
+	d := diff.Compare(base, res)
+
+	var blockers []string
+	for _, w := range d.Warnings {
+		fmt.Fprintf(os.Stderr, "анхаар: baseline — %s\n", w.Text("mn"))
+		if baselineUntrusted[w.Code] {
+			blockers = append(blockers, w.Code)
+		}
+	}
+	if len(blockers) > 0 {
+		fmt.Fprintf(os.Stderr, "алдаа: baseline итгэх боломжгүй (%s) — ХЭРЭГСЭХГҮЙ, бүх олдворыг тооцно\n",
+			strings.Join(blockers, ", "))
+		return "(baseline хэрэгсэгдсэнгүй)", 0
+	}
+
+	// Шинэ ба дордсон finding-үүд.
+	counted := map[string]bool{}
+	for _, it := range d.Items {
+		if it.Change == diff.ChangeNew || it.Change == diff.ChangeWorsened {
+			counted[baselineKey(it.ID, it.CanonicalControl, it.Resource, it.Namespace)] = true
+		}
+	}
+
+	filtered := res
+	filtered.Findings = nil
+	for _, f := range res.Findings {
+		if counted[baselineKey(f.ID, f.CanonicalControl, f.Resource, f.Namespace)] {
+			filtered.Findings = append(filtered.Findings, f)
+		}
+	}
+
+	// Хоёр дахь үнэлгээ: зөвхөн шинэ/дордсон дээр босго шалгана. Score нь
+	// filtered.Summary-аас ирэх тул min_score УРЬДЫН АДИЛ бүтэн кластерын
+	// оноогоор шалгагдана — тэр бол baseline-аас хамаарах ёсгүй үнэмлэхүй хэмжүүр.
+	nr := pol.Evaluate(filtered, time.Now())
+	skipped := len(r.Violations) - len(nr.Violations)
+
+	r.Violations = nr.Violations
+	r.Passed = nr.Passed
+	r.Reasons = nr.Reasons
+
+	return fmt.Sprintf("baseline: %d өмнөх олдвор тооцоогүй, шинэ+дордсон %d",
+		skipped, len(d.Items)-d.Counts[diff.ChangeUnchanged]-d.Counts[diff.ChangeFixed]-d.Counts[diff.ChangeImproved]), 0
+}
+
+// baselineKey — diff нь ID хоосон үед canonical түлхүүрт шилждэг тул энд ч мөн
+// адил: ID байвал ID, үгүй бол control|resource|namespace.
+func baselineKey(id, control, resource, namespace string) string {
+	if id != "" {
+		return id
+	}
+	return "k:" + control + "|" + resource + "|" + namespace
 }

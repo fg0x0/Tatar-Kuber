@@ -227,3 +227,88 @@ func TestCLI_RawDirScanIsOffline(t *testing.T) {
 		t.Errorf("scan_mode=%q, want offline (--raw-dir нь scanner ажиллуулдаггүй)", res.Metadata.ScanMode)
 	}
 }
+
+// gate --baseline: аль хэдийн байсан олдворт унахгүй, ЗӨВХӨН шинэ ба дордсонд
+// унана. Багууд эхний өдөр 200 олдвортой танилцахдаа gate-ээ бүхэлд нь
+// унтраахаас сэргийлэх зорилготой — унтраасан gate бол gate биш.
+func TestCLI_GateBaseline(t *testing.T) {
+	out := t.TempDir()
+	if code := cmdScan([]string{"--raw-dir", "../../examples/demo", "--cluster", "bl", "-o", out}); code != 0 {
+		t.Fatalf("scan exit=%d", code)
+	}
+	basePath := filepath.Join(out, "scan-result.json")
+	none := filepath.Join(out, "none.yaml")
+
+	// Baseline-гүй: demo-д HIGH бий тул унана.
+	if code := cmdGate([]string{"--input", basePath, "--policy", none}); code != 1 {
+		t.Fatalf("baseline-гүй: exit=%d, want 1", code)
+	}
+	// Өөрөө өөртэйгээ: өөрчлөлт алга тул давна.
+	if code := cmdGate([]string{"--input", basePath, "--policy", none, "--baseline", basePath}); code != 0 {
+		t.Errorf("өөрчлөлтгүй baseline: exit=%d, want 0", code)
+	}
+
+	var res finding.ScanResult
+	b, err := os.ReadFile(basePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(b, &res); err != nil {
+		t.Fatal(err)
+	}
+
+	write := func(name string, r finding.ScanResult) string {
+		p := filepath.Join(out, name)
+		d, err := json.Marshal(r)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, d, 0o644); err != nil {
+			t.Fatal(err)
+		}
+		return p
+	}
+
+	// ШИНЭ critical нэмэхэд унана.
+	withNew := res
+	withNew.Findings = append(append([]finding.Finding(nil), res.Findings...), finding.Finding{
+		ID: "blnew0000001", CanonicalControl: "TATAR-SEC-001", Resource: "deployment/brand-new",
+		Namespace: "production", Severity: finding.SeverityCritical, Title: "new",
+	})
+	if code := cmdGate([]string{"--input", write("new.json", withNew), "--policy", none, "--baseline", basePath}); code != 1 {
+		t.Errorf("шинэ CRITICAL: exit=%d, want 1", code)
+	}
+
+	// ДОРДСОН олдвор мөн унагана: LOW нь CRITICAL болоход "хуучин асуудал" гэж
+	// чимээгүй өнгөрөх нь энэ хэрэгслийн эсэргүүцдэг зүйл.
+	worse := res
+	worse.Findings = append([]finding.Finding(nil), res.Findings...)
+	bumped := false
+	for i := range worse.Findings {
+		if finding.Rank(worse.Findings[i].Severity) < finding.Rank(finding.SeverityHigh) {
+			worse.Findings[i].Severity = finding.SeverityCritical
+			bumped = true
+			break
+		}
+	}
+	if !bumped {
+		t.Fatal("дордуулах олдвор олдсонгүй")
+	}
+	if code := cmdGate([]string{"--input", write("worse.json", worse), "--policy", none, "--baseline", basePath}); code != 1 {
+		t.Errorf("дордсон олдвор: exit=%d, want 1", code)
+	}
+
+	// Итгэх боломжгүй baseline (өөр cluster) -> ХЭРЭГСЭХГҮЙ, бүх олдворт унана.
+	other := res
+	other.Metadata.ClusterName = "staging"
+	if code := cmdGate([]string{"--input", basePath, "--policy", none,
+		"--baseline", write("other.json", other)}); code != 1 {
+		t.Errorf("cluster зөрсөн baseline: exit=%d, want 1 (baseline хэрэгсэхгүй)", code)
+	}
+
+	// Байхгүй файл -> уншилтын алдаа.
+	if code := cmdGate([]string{"--input", basePath, "--policy", none,
+		"--baseline", filepath.Join(out, "missing.json")}); code != 2 {
+		t.Errorf("байхгүй baseline: exit=%d, want 2", code)
+	}
+}
