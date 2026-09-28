@@ -1,0 +1,85 @@
+# Нийтлэгдсэн release notes нь repo доторх эх хувьтайгаа таарч байгааг шалгана.
+#
+# ЯАГААД: GitHub дээрх release-ийн бие нь ХУВЬСАХ хуулбар. GoReleaser нь
+# mode: replace тохиргоотой тул аль нэг ажиллалт байгаа release рүү хүрвэл түүний
+# биеийг автомат changelog-оор дарж бичнэ. 2026-09-27-нд v1.0.3-ийн тайлбар
+# 6849 -> 1024 тэмдэгт болж хумигдсаныг ямар ч шалгалт улаан болгоогүй:
+# ажиллалт нь амжилттай дуусаж, зөвхөн ТЕКСТ алга болсон. Унасныг хардаг хяналт
+# ийм тохиолдлыг хэзээ ч барихгүй — тиймээс агуулгыг нь тулгана.
+name: Release notes
+
+on:
+  schedule:
+    - cron: "0 7 * * *" # өдөр тутам — дарагдсаныг маргааш нь мэднэ
+  workflow_dispatch:
+  push:
+    branches: [master, main]
+    paths:
+      - "docs/releases/**"
+      - ".github/workflows/release-notes.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compare docs/releases/*.md against the published releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -uo pipefail
+          fail=0; checked=0; skipped=0
+
+          for f in docs/releases/v*.md; do
+            tag="$(basename "$f" .md)"
+
+            # Хараахан гараагүй release-д зориулж урьдчилж бичсэн файл байж
+            # болно — тэрийг алдаа гэж үзэхгүй, зүгээр л алгасана.
+            if ! gh api "repos/$REPO/releases/tags/$tag" >/tmp/rel.json 2>/dev/null; then
+              echo "::notice::$tag — GitHub дээр release алга, алгасав"
+              skipped=$((skipped+1)); continue
+            fi
+
+            jq -r '.body' /tmp/rel.json > /tmp/published.md
+            checked=$((checked+1))
+
+            # Нормчилол нь энэ шалгалтын ХАМГИЙН чухал хэсэг. GitHub нь мөрийн
+            # төгсгөлийг CRLF болгож, мөр төгсгөлийн зайг хасдаг. Түүхий текстээр
+            # тулгавал өдөр бүр улаан гарч, хоёр хоногийн дараа хүн хардаггүй
+            # болно — хуурамч дохио нь жинхэнэ дохиог нуудаг.
+            python3 - "$f" /tmp/published.md <<'PY'
+          import sys
+          def norm(p):
+              s = open(p, encoding='utf-8').read()
+              s = s.replace('\r\n', '\n').replace('\r', '\n')
+              return '\n'.join(line.rstrip() for line in s.split('\n')).strip()
+          a, b = norm(sys.argv[1]), norm(sys.argv[2])
+          sys.exit(0 if a == b else 1)
+          PY
+            if [ $? -ne 0 ]; then
+              fail=1
+              echo "::error::$tag — нийтлэгдсэн тайлбар нь $f-тэй зөрж байна."
+              echo "  repo:      $(wc -c < "$f") байт"
+              echo "  published: $(wc -c < /tmp/published.md) байт"
+              echo "  --- эхний зөрүү ---"
+              diff <(sed -e 's/[[:space:]]*$//' "$f") \
+                   <(tr -d '\r' < /tmp/published.md | sed -e 's/[[:space:]]*$//') \
+                | head -20 || true
+              echo "  Сэргээх:  gh release edit $tag --notes-file $f"
+            else
+              echo "✓ $tag"
+            fi
+          done
+
+          echo "шалгасан=$checked  алгассан=$skipped"
+          if [ "$checked" -eq 0 ]; then
+            echo "::error::Ямар ч release шалгагдсангүй — docs/releases/ хоосон эсвэл нэршил зөрсөн байж болзошгүй"
+            exit 1
+          fi
+          exit $fail
+# workflow-registration: added 2026-09-28

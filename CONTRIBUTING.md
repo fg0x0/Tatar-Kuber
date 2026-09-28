@@ -103,13 +103,19 @@ go test ./...                      # 17 packages, including the golden corpus
 git tag -a vX.Y.Z -m "..." && git push origin vX.Y.Z
 ```
 
-GoReleaser runs on the tag and **replaces the release body with an auto-changelog**,
-so hand-written notes go on afterwards:
+Write the release notes into `docs/releases/vX.Y.Z.md` **before tagging** — that file,
+not the GitHub release page, is the source of truth. GoReleaser runs on the tag and
+**replaces the release body with an auto-changelog**, so the notes go on afterwards:
 
 ```bash
-gh release edit vX.Y.Z --notes-file notes.md --title "..." --latest
+gh release edit vX.Y.Z --notes-file docs/releases/vX.Y.Z.md --title "..." --latest
 git push origin :refs/tags/v1 && git tag -f v1 vX.Y.Z && git push origin v1
 ```
+
+`.github/workflows/release-notes.yml` compares every file in `docs/releases/` against
+what is published, daily and on every change to that folder. If a release body is ever
+overwritten again, it turns red the next morning and prints the one command that
+restores it. A file for a version that has not been released yet is skipped, not failed.
 
 Moving `v1` must come **last**, after the notes are in place. The release workflow
 triggers on `v[0-9]+.[0-9]+.[0-9]+*`, which `v1` does not match — it used to match
