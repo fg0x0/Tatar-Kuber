@@ -111,9 +111,18 @@ gh release edit vX.Y.Z --notes-file notes.md --title "..." --latest
 git push origin :refs/tags/v1 && git tag -f v1 vX.Y.Z && git push origin v1
 ```
 
-Moving `v1` is safe: the release workflow only triggers on `v[0-9]+.[0-9]+.[0-9]+*`.
-It used to match `v*`, which meant moving `v1` re-ran GoReleaser against the *same*
-release and wiped the notes that had just been applied.
+Moving `v1` must come **last**, after the notes are in place. The release workflow
+triggers on `v[0-9]+.[0-9]+.[0-9]+*`, which `v1` does not match — it used to match
+`v*`, and moving `v1` then re-ran GoReleaser against the *same* release (`v1` and
+`vX.Y.Z` point at one commit, so GoReleaser resolved the same version) and wiped the
+hand-written notes seconds after they were applied.
+
+One subtlety worth knowing: for a tag push, GitHub reads the workflow file **from the
+commit the tag points at**, not from `master`. So a `v1` still pointing at a release
+made before this fix will trigger the old `v*` workflow no matter what `master` says.
+It corrects itself at the next release, when `v1` moves onto a commit that carries the
+narrowed filter. Until then, leave `v1` alone; if a run does fire, cancel it before it
+reaches the release step.
 
 Finally — **download the published binary and run it**. v1.0.0 shipped working code
 in a broken artifact; the only way to know is to fetch the release and exercise
