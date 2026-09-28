@@ -81,6 +81,44 @@ go test ./internal/cli/ -run TestGolden -update    # accept, once you have read 
 
 Regenerating without reading the diff makes the guard worthless.
 
+## Cutting a release
+
+The version string lives in **six** places, and only one of them is injected by the
+release tooling. `TestVersionsAgree` catches the two that matter; the rest are manual.
+
+1. `internal/orchestrator/orchestrator.go` — `const Version` (**not** reachable by
+   ldflags; this is the one that ends up in every `scan-result.json` and SARIF file)
+2. `internal/cli/root.go` — `var Version` (goreleaser overwrites it at build time)
+3. `README.md` — release badge, and the `./scripts/build.sh <version>` example in
+   both language sections
+4. `docs/img/architecture.gen.py` — subtitle, then re-render both PNGs
+5. `examples/report/` — regenerate all four files (they embed the version)
+6. `ROADMAP.md` / `README.md` — move the new version out of the previous
+   "shipped" section into its own
+
+Then:
+
+```bash
+go test ./...                      # 17 packages, including the golden corpus
+git tag -a vX.Y.Z -m "..." && git push origin vX.Y.Z
+```
+
+GoReleaser runs on the tag and **replaces the release body with an auto-changelog**,
+so hand-written notes go on afterwards:
+
+```bash
+gh release edit vX.Y.Z --notes-file notes.md --title "..." --latest
+git push origin :refs/tags/v1 && git tag -f v1 vX.Y.Z && git push origin v1
+```
+
+Moving `v1` is safe: the release workflow only triggers on `v[0-9]+.[0-9]+.[0-9]+*`.
+It used to match `v*`, which meant moving `v1` re-ran GoReleaser against the *same*
+release and wiped the notes that had just been applied.
+
+Finally — **download the published binary and run it**. v1.0.0 shipped working code
+in a broken artifact; the only way to know is to fetch the release and exercise
+`scan`, `report --lang`, `gate`, `diff` and `verify-lab` against it.
+
 ## Code style
 
 - `gofmt` + `go vet` clean; small, well-named functions; comments where non-obvious.
