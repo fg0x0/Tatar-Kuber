@@ -86,7 +86,7 @@ Full walk-through: [`docs/dedup-example.md`](docs/dedup-example.md).
 | Popeye | Runtime hygiene (dead service, unused, broken reference) | 0.22 |
 
 > The "live-tested with" column is the version the [real-cluster workflow](.github/workflows/real-cluster.yml)
-> actually runs against every week. Scanner CLIs rename flags between releases, so a mismatch shows up as
+> actually runs against every day. Scanner CLIs rename flags between releases, so a mismatch shows up as
 > `status: error` / `unavailable` in the report's *Scanner coverage* table rather than as a silent zero.
 
 > `kube-bench` (node/CIS) needs a privileged DaemonSet and is out of MVP scope (Enterprise Agent).
@@ -199,7 +199,7 @@ sources → scanners (parallel) → normalize → canonical + dedup → blind-sh
 
 ```bash
 go build ./...
-go test ./...          # 16 packages, all green
+go test ./...          # 17 packages, all green
 ./scripts/build.sh 1.0.3
 ```
 
@@ -319,7 +319,7 @@ digest"*, which fires on **any** tagged image — mapped to ":latest tag" it rep
 general hostPath check at all). Both are fixed, every remaining mapping was verified against real
 Checkov output, and coverage went from 18 to 28 rules. A new
 [static-scan workflow](.github/workflows/static-scan.yml) runs real Checkov and `trivy config` on the
-repo's own vulnerable manifests every week — **Mode A is now validated too, with no cluster needed.**
+repo's own vulnerable manifests every day — **Mode A is now validated too, with no cluster needed.**
 
 **Trivy** was audited the same way against real `trivy config` output: **all 11 of its mappings were
 correct** — the cleanest of the three — and 6 more rules were added from verified meanings, taking it
@@ -457,9 +457,9 @@ Open Core. Community CLI — Apache-2.0.
 **Kubernetes аюулгүй байдлын үнэлгээний framework — нэг команд, дөрвөн scanner, нэг стандарт тайлан.**
 
 TATAR-Kuber нь **Trivy · Kubescape · Checkov · Popeye**-ийг ажиллуулж, тэдгээрийн гаралтыг
-нэг **canonical control загвар** руу нэгтгэж, давхардлыг арилгаж ("3 scanner нэг асуудал
+нэгдсэн **canonical control загварт** нэгтгэж, давхардлыг арилгаж ("3 scanner нэг асуудал
 олсон" — 3 finding биш), эрсдэлийг үнэлж, нэг тайлан гаргана — **JSON / SARIF / HTML**,
-**англи эсвэл монгол** хэлээр. Инженер / auditor / CISO бүгд ойлгоно.
+**англи эсвэл монгол** хэлээр. Инженер, аудитор, CISO аль аль нь ойлгоход хялбар.
 
 ### Давхардлыг арилгах жишээ (`3 finding → 1`)
 
@@ -498,14 +498,14 @@ TATAR-Kuber эдгээрийг **нэг** finding болгож нэгтгэнэ:
 
 ### Scanner-ууд
 
-| Scanner | Зорилго | Live-д тестлэгдсэн |
+| Scanner | Зорилго | Бодит орчинд шалгасан |
 |---|---|---|
 | Trivy | Image CVE, secret, misconfiguration | 0.74 (`k8s --report all`) |
 | Kubescape | NSA / MITRE / RBAC / compliance (үндсэн posture engine) | 4.0 (`--kube-contexts`) |
 | Checkov | IaC (YAML / Helm / Terraform) | 3.2 (local горим) |
 | Popeye | Runtime hygiene (dead service, unused, broken reference) | 0.22 |
 
-> "Live-д тестлэгдсэн" гэдэг нь [real-cluster workflow](.github/workflows/real-cluster.yml) 7 хоног тутам
+> "Бодит орчинд шалгасан" гэдэг нь [real-cluster workflow](.github/workflows/real-cluster.yml) өдөр бүр
 > бодитоор ажиллуулдаг хувилбар. Scanner CLI-ууд хувилбар хооронд флагаа нэрлэж сольдог тул зөрүү нь
 > тайлангийн *Scanner хамрах хүрээ* хүснэгтэд `status: error` / `unavailable` болж харагдана — чимээгүй
 > тэг болохгүй.
@@ -516,7 +516,7 @@ TATAR-Kuber эдгээрийг **нэг** finding болгож нэгтгэнэ:
 
 - **Live Mode B** — ажиллаж буй cluster-ийг (read-only) бодит scanner CLI-ууд ажиллуулан шалгана
 - Local (Mode A) + **offline ingest** (урьдчилан цуглуулсан raw)
-- **Parallel adapters** — scanner-ууд зэрэг ажиллана, тус бүр өөрийн timeout-той; нэг нь унахад бусад нь үргэлжилнэ (graceful degradation), гаралт detrministik хэвээр
+- **Parallel adapters** — scanner-ууд зэрэг ажиллана, тус бүр өөрийн timeout-той; нэг нь унахад бусад нь үргэлжилнэ (graceful degradation), гаралт нь тогтмол, давтагдахуйц хэвээр
 - **Canonical Control Mapping** — scanner бүрийн rule ID-г нэг `TATAR-*` control руу
 - **Deduplication** — олон scanner-ийн ижил асуудлыг нэгтгэж `found_by`-г хадгална
 - **Confidence engine** — олон scanner-ийн санал нийлэлт + determinism (Trivy ганц CVE ч HIGH)
@@ -548,7 +548,7 @@ secrets management (Vault)-ыг **орлохгүй — тэдгээртэй ха
 | Тайлан & risk scoring | ✅ | dedup, оноо, JSON / SARIF / HTML |
 | Runtime hygiene | ⚠️ | Popeye — threat detection БИШ |
 
-**Хийхгүй (зориудаар) — хамт ашигла**
+**Хамрахгүй (зориудаар) — хамт ашиглана**
 
 | Хамрахгүй | Оронд нь |
 |---|---|
@@ -558,7 +558,7 @@ secrets management (Vault)-ыг **орлохгүй — тэдгээртэй ха
 | Admission control (deploy блоклох) | Kyverno · OPA Gatekeeper |
 | Secrets management | HashiCorp Vault · External Secrets |
 
-### Түргэн эхлэл (offline, cluster/суулгац хэрэггүй)
+### Түргэн эхлэл (offline — cluster ба scanner суулгах шаардлагагүй)
 
 ```bash
 git clone https://github.com/ochmunkh/tatar-kuber-lab
@@ -580,15 +580,15 @@ tatar-kuber report --input out/scan-result.json -o html --lang mn --out report.h
 
 **Эх сурвалж** — ажиллаж буй cluster (read-only, Mode B), локал манифест (`-f`), эсвэл урьдчилан цуглуулсан raw (`--raw-dir`).
 
-**Scanner-ууд (зэрэг)** — Trivy, Kubescape, Checkov, Popeye нь **зэрэг** ажиллана, тус бүр өөрийн timeout-той. Нэг scanner унах/timeout болоход бусад нь үргэлжилнэ (graceful degradation), гаралт detrministik хэвээр.
+**Scanner-ууд (зэрэг)** — Trivy, Kubescape, Checkov, Popeye нь **зэрэг** ажиллана, тус бүр өөрийн timeout-той. Нэг scanner унах/timeout болоход бусад нь үргэлжилнэ (graceful degradation), гаралт нь тогтмол, давтагдахуйц хэвээр.
 
-**Цөм** — scanner бүрийн гаралтыг нэгдсэн схем рүү хөрвүүлж, canonical `TATAR-*` control руу зурж **давхардлыг арилгана** (нэг асуудал, `found_by` = олсон бүх scanner), blind-shot бууралт хийж, дараа нь **тайлбарлагдах** risk оноог тооцно (finding бүрт `risk_factors` + cluster `risk_breakdown`).
+**Цөм** — scanner бүрийн гаралтыг нэгдсэн схем рүү хөрвүүлж, canonical `TATAR-*` control-той холбож **давхардлыг арилгана** (нэг асуудал, `found_by` = олсон бүх scanner), blind-shot бууралт хийж, дараа нь **тайлбарлагдах** risk оноог тооцно (finding бүрт `risk_factors` + cluster `risk_breakdown`).
 
-**Гаралт** — JSON, SARIF 2.1.0, хоёр хэлт HTML dashboard, мөн `verify-lab` regression.
+**Гаралт** — JSON, SARIF 2.1.0, англи, монгол хэл дээрх HTML dashboard, мөн `verify-lab` regression.
 
-**Adoption layer** — `gate` команд нь `.tatar-kuber.yaml` бодлогыг CI-д мөрдүүлнэ (exit code), GitHub Action нь SARIF-ийг Code Scanning руу upload хийнэ, binary нь brew / curl / Docker-оор түгнэ.
+**Нэвтрүүлэлтийн түвшин** — `gate` команд нь `.tatar-kuber.yaml` бодлогыг CI-д мөрдүүлнэ (exit code), GitHub Action нь SARIF-ийг Code Scanning руу upload хийнэ, binary нь brew / curl / Docker-оор түгнэ.
 
-> **v1.0.0-д юу өөрчлөгдсөн:** live-cluster scan болон зэрэгцээ ажиллагаа хэсэгчлэн/туршилтын түвшнээс бүрэн ажиллагаатай болов; risk оноо тайлбарлагдах болов; CI gate + түгээлт шинээр нэмэгдэв.
+> **v1.0.0-д юу өөрчлөгдсөн:** live-cluster scan болон зэрэгцээ гүйцэтгэл хэсэгчлэн/туршилтын түвшнээс бүрэн ажиллагаатай болов; risk оноо тайлбарлагдах болов; CI gate + түгээлт шинээр нэмэгдэв.
 
 ### CLI командууд
 
@@ -597,7 +597,7 @@ tatar-kuber scan        --kubeconfig | --context | -f | --raw-dir  [--namespace 
                         # live scan нь scanner-уудын түүхий гаралтыг <out>/raw/-д хадгална (нотолгоо; --raw-dir-ээр дахин боловсруулна)
 tatar-kuber report      -o json | sarif | html  [--fail-on HIGH]
 tatar-kuber gate        --input scan-result.json [--policy .tatar-kuber.yaml] [--fail-on high] [--min-score N]
-                        # --baseline prev/scan-result.json : ЗӨВХӨН шинэ ба дордсонд унана
+                        # --baseline prev/scan-result.json : зөвхөн шинэ ба дордсон finding дээр fail болно
 tatar-kuber doctor      # ямар scanner суусан, хувилбар, дэмжих горим
 tatar-kuber diff        --old prev/scan-result.json --new out/scan-result.json
                         # тренд: шинэ / зассан / дордсон / сайжирсан  [--fail-on-new high] [-o json]
@@ -611,7 +611,7 @@ tatar-kuber version
 долоо хоногийн дараа унтраагдана — унтраасан gate бол gate биш. Ингэхээс сэргийлэх хоёр
 механизм бий, энэ дарааллаар ашиглана.
 
-**1. Baseline — өнөөдрийг хүлээн зөвшөөрч, маргаашид унах.** Одоогийн шалгалтыг лавлагаа
+**1. Baseline — өнөөдрийн төлөвийг хүлээн зөвшөөрч, маргаашийн өөрчлөлтийг шалгах.** Одоогийн шалгалтыг лавлагаа
 болгож үлдээгээд, зөвхөн шинэ ба дордсоныг тооцуулна:
 
 ```bash
@@ -624,7 +624,7 @@ Baseline-д аль хэдийн байгаа олдвор тооцогдохгү
 
 Харьцуулалт итгэх боломжгүй бол — өөр cluster, өөр горим, нэг тал нь `--no-rollup` —
 baseline **хэрэгсэгдэхгүй**, бүх олдвор тооцогдоно. Аюулгүй байдлын gate эргэлзээтэй үедээ
-хаалттай талдаа унана.
+fail-closed зарчмаар ажиллана.
 
 *Хаана хадгалах вэ.* `baseline/scan-result.json`-ыг repo-д commit хийнэ. Хэдэн зуун KB JSON,
 бусад хүлээн зөвшөөрсөн эрсдэлийн адил хянагдах ёстой, мөн `git log` нь "хэзээ, хэн үүнийг
@@ -633,8 +633,8 @@ baseline **хэрэгсэгдэхгүй**, бүх олдвор тооцогдо�
 болгоно. Шинэчлэхдээ зориудаар: baseline-ыг хөдөлгөсөн commit бол "бид энэ жагсаалтыг одоо
 хүлээн зөвшөөрч байна" гэсэн мэдэгдэл.
 
-**2. Suppress — нэг олдворыг шалтгаан ба хугацаатайгаар хүлээн зөвшөөрөх.** Хамт амьдрахаар
-шийдсэн цөөн хэдийг `.tatar-kuber.yaml`-д нэрлэнэ:
+**2. Suppress — нэг олдворыг шалтгаан ба хугацаатайгаар хүлээн зөвшөөрөх.** Ухамсартай
+үлдээхээр шийдсэн цөөн эрсдэлийг `.tatar-kuber.yaml`-д нэрлэнэ:
 
 ```yaml
 suppress:
@@ -662,7 +662,7 @@ docker run --rm -v "$PWD:/work" -w /work ghcr.io/ochmunkh/tatar-kuber:latest sca
 
 ```bash
 go build ./...
-go test ./...          # 16 багц, бүгд ногоон
+go test ./...          # 17 багц, бүгд ногоон
 ./scripts/build.sh 1.0.3
 ```
 
@@ -671,7 +671,7 @@ go test ./...          # 16 багц, бүгд ногоон
 `docs/` дотор 6 инженерийн баримт (01 Unified Schema, 02 Canonical Mapping, 03 Scanner
 Adapter Interface, 04 Severity & Risk Scoring, 05 CLI Spec, 06 Repository Structure).
 
-**[`docs/coverage.md`](docs/coverage.md)** — хэрэгсэл юуг ҮНЭХЭЭР шалгадгийг харуулна:
+**[`docs/coverage.md`](docs/coverage.md)** — хэрэгсэл яг юуг шалгадгийг харуулна:
 canonical control бүрийг scanner бүртэй тулгасан матриц. Registry-ээс үүсдэг бөгөөд тестээр
 нийцлийг нь барина. Ямар ч rule зураглагдаагүй control-ыг "шалгагддаггүй" гэж ил гаргана —
 33-аас 1 нь.
@@ -713,7 +713,7 @@ digest"*, ямар ч tag-тай image дээр гардаг — ":latest tag" �
 ерөнхий hostPath БИШ (Checkov-д ерөнхий hostPath шалгалт огт байхгүй). Хоёуланг зассан, бусад
 зураглал бүрийг бодит Checkov гаралтаар батлав, хамрах хүрээ 18 -> 28 rule болов. Шинэ
 [static-scan workflow](.github/workflows/static-scan.yml) нь бодит Checkov ба `trivy config`-ыг
-өөрийн эмзэг манифест дээр 7 хоног тутам ажиллуулна — **Mode A ч одоо батлагдаж байна, cluster
+өөрийн эмзэг манифест дээр өдөр бүр ажиллуулна — **Mode A ч одоо батлагдаж байна, cluster
 шаардахгүйгээр.**
 
 **Trivy**-г мөн ижил аргаар бодит `trivy config` гаралттай тулгав: **11 зураглал бүгд зөв** —
