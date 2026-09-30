@@ -10,6 +10,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // maxExtracted — total bytes one artefact may unpack to. Checkov's zip is a
@@ -27,17 +28,33 @@ const maxExtracted = 1 << 30
 // The unpack happens beside the destination and is renamed over it, so an
 // install that fails half way leaves the previous version in place.
 func install(artefact string, kind Archive, scanner, toolsDir string) (string, error) {
-	dest := filepath.Join(toolsDir, scanner)
-	staging := dest + ".new"
-	if err := os.RemoveAll(staging); err != nil {
-		return "", err
-	}
-	if err := os.MkdirAll(staging, 0o755); err != nil {
+	staging, rel, err := unpackStaged(artefact, kind, scanner, toolsDir)
+	if err != nil {
 		return "", err
 	}
 	defer func() { _ = os.RemoveAll(staging) }()
+	return commitStaged(staging, filepath.Join(toolsDir, scanner), rel)
+}
 
-	var err error
+// unpackStaged — extract and validate into <toolsDir>/<scanner>.new, and leave
+// it there. Nothing outside the staging directory is touched, so a failure here
+// cannot disturb an installed scanner.
+//
+// Split out from install so Apply can unpack EVERY scanner before committing
+// ANY of them: installing as it went meant a failure unpacking the third
+// scanner left the first two already replaced, i.e. a half-updated toolchain
+// reported as an error.
+//
+// The caller owns the returned staging directory and must remove it.
+func unpackStaged(artefact string, kind Archive, scanner, toolsDir string) (staging, rel string, err error) {
+	staging = filepath.Join(toolsDir, scanner) + ".new"
+	if err = os.RemoveAll(staging); err != nil {
+		return "", "", err
+	}
+	if err = os.MkdirAll(staging, 0o755); err != nil {
+		return "", "", err
+	}
+
 	switch kind {
 	case ArchiveRaw:
 		err = copyFile(artefact, filepath.Join(staging, scanner), 0o755)
@@ -49,20 +66,30 @@ func install(artefact string, kind Archive, scanner, toolsDir string) (string, e
 		err = fmt.Errorf("unknown archive kind %q", kind)
 	}
 	if err != nil {
-		return "", err
+		_ = os.RemoveAll(staging)
+		return "", "", err
 	}
 
-	rel, err := findBinary(staging, scanner)
+	rel, err = findBinary(staging, scanner)
 	if err != nil {
-		return "", err
+		_ = os.RemoveAll(staging)
+		return "", "", err
 	}
-	if err := os.Chmod(filepath.Join(staging, rel), 0o755); err != nil {
-		return "", err
+	if err = os.Chmod(filepath.Join(staging, rel), 0o755); err != nil {
+		_ = os.RemoveAll(staging)
+		return "", "", err
 	}
+	return staging, rel, nil
+}
 
-	// Rename cannot replace a non-empty directory, so the old one goes first.
-	// The window between the two is the price of not needing a second copy of
-	// a few hundred megabytes on disk.
+// commitStaged — move a verified staging directory into place.
+//
+// This is the only step that touches an installed scanner, and it is kept as
+// short as possible for that reason: by the time it runs, every artefact has
+// been downloaded, checksummed and unpacked. Rename cannot replace a non-empty
+// directory, so the old one goes first; the window between the two is the price
+// of not needing a second copy of a few hundred megabytes on disk.
+func commitStaged(staging, dest, rel string) (string, error) {
 	if err := os.RemoveAll(dest); err != nil {
 		return "", err
 	}
@@ -77,6 +104,9 @@ func install(artefact string, kind Archive, scanner, toolsDir string) (string, e
 // Located by name rather than by a per-release path in the catalogue: the four
 // projects package their binary at four different depths, and a path recorded
 // here would be one more thing to get wrong on every upstream repackaging.
+// depth — how many directories deep a relative path sits.
+func depth(rel string) int { return strings.Count(rel, string(filepath.Separator)) }
+
 func findBinary(root, name string) (string, error) {
 	var found string
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
@@ -91,8 +121,12 @@ func findBinary(root, name string) (string, error) {
 			return err
 		}
 		// The shallowest match wins: a bundle that also ships a library called
-		// after the tool keeps the top-level executable.
-		if found == "" || len(rel) < len(found) {
+		// after the tool keeps the top-level executable. Depth is counted in
+		// separators, not string length -- comparing len() made a deeper member
+		// with a shorter name ("a/b") beat a top-level one ("trivy-bin"), which
+		// is the opposite of what this rule is for.
+		if found == "" || depth(rel) < depth(found) ||
+			(depth(rel) == depth(found) && len(rel) < len(found)) {
 			found = rel
 		}
 		return nil

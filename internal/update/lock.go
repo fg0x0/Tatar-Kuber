@@ -28,6 +28,14 @@ type LockEntry struct {
 	Version string `yaml:"version"`
 	SHA256  string `yaml:"sha256"`
 	Cosign  string `yaml:"cosign"`
+
+	// Installed — the version Apply actually put on disk, written ONLY by
+	// Apply. Kept separate from Version because Version is a pin: a
+	// hand-written tools.lock.yaml, or one shipped with the repo, names the
+	// version that SHOULD be installed. Reading `installed` off `version` made
+	// `update --check` report a scanner as installed and up to date when
+	// nothing had ever been downloaded.
+	Installed string `yaml:"installed,omitempty"`
 }
 
 // Lock — ~/.tatar-kuber/tools.lock.yaml, in the shape Doc #6 §7 documents.
@@ -89,6 +97,11 @@ func SaveLock(path string, l Lock) error {
 	b.WriteString("# cosign: \"" + CosignUnverified + "\" means the signature was NOT checked.\n")
 	b.WriteString("# cosign verification is not implemented yet (planned for v2), so this file\n")
 	b.WriteString("# never says \"" + CosignVerified + "\" today.\n")
+	b.WriteString("#\n")
+	b.WriteString("# installed: written ONLY by a successful `update`. version is what SHOULD\n")
+	b.WriteString("# be installed; installed is what is. A pin with no installed line has never\n")
+	b.WriteString("# been downloaded, and `update --check` says so rather than reporting it as\n")
+	b.WriteString("# up to date.\n")
 	b.WriteString("tools:\n")
 	for _, n := range names {
 		e := l.Tools[n]
@@ -96,6 +109,13 @@ func SaveLock(path string, l Lock) error {
 		fmt.Fprintf(&b, "    version: %q\n", e.Version)
 		fmt.Fprintf(&b, "    sha256:  %q\n", e.SHA256)
 		fmt.Fprintf(&b, "    cosign:  %q\n", e.Cosign)
+		// Omitted rather than written empty: an absent line is how a pin that
+		// has never been installed is represented, and writing installed: ""
+		// would make the two states look different in the file but identical
+		// once parsed.
+		if e.Installed != "" {
+			fmt.Fprintf(&b, "    installed: %q\n", e.Installed)
+		}
 	}
 
 	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {

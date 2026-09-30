@@ -12,10 +12,11 @@
 //     touched. There is no trust-on-first-use path: the pin comes from
 //     tools.lock.yaml, where a human put it after comparing it with what the
 //     upstream project published.
-//   - Nothing is installed until EVERY requested scanner has been downloaded
-//     and its checksum verified. A mismatch therefore installs nothing at all
-//     rather than "everything except the bad one", so a half-updated toolchain
-//     is not a state this command can leave behind.
+//   - Nothing is installed until EVERY requested scanner has been downloaded,
+//     checksum-verified AND unpacked. A mismatch, or an unreadable archive,
+//     therefore installs nothing at all rather than "everything except the bad
+//     one". The final step is a rename per scanner; that is not a transaction,
+//     but by then everything that realistically fails has already happened.
 //   - The cosign step is a stub (see verify.go) and says so everywhere it is
 //     visible: on screen and in tools.lock.yaml. It never reports "verified".
 package update
@@ -30,6 +31,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -139,7 +141,7 @@ func Resolve(opts Options) ([]Plan, error) {
 			SHA256:    sum,
 			Archive:   a.Archive,
 			Platform:  plat,
-			Installed: entry.Version,
+			Installed: entry.Installed,
 		})
 	}
 	return plans, nil
@@ -191,7 +193,10 @@ func Apply(ctx context.Context, opts Options) ([]Result, error) {
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", p.Scanner, err)
 		}
-		if sum != p.SHA256 {
+		// Hex case is not part of a checksum: release pages publish both, and
+		// rejecting an upper-case pin as a MISMATCH would read as a
+		// supply-chain alarm rather than the formatting difference it is.
+		if !strings.EqualFold(sum, p.SHA256) {
 			return nil, &ChecksumError{Scanner: p.Scanner, Want: p.SHA256, Got: sum}
 		}
 		checked, err := opts.verifier().Verify(ctx, p, artefact)
@@ -212,18 +217,51 @@ func Apply(ctx context.Context, opts Options) ([]Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	results := make([]Result, 0, len(ready))
+	// Unpack every artefact BEFORE replacing any installed scanner. Installing
+	// inside this loop meant a failure unpacking the third scanner left the
+	// first two already replaced — a half-updated toolchain, reported only as
+	// an error. Now a failure here leaves every installed scanner untouched.
+	type unpacked struct {
+		staged
+		dir string // <tools>/<scanner>.new
+		rel string // the binary, relative to dir
+	}
+	all := make([]unpacked, 0, len(ready))
+	defer func() {
+		// Whatever happens, no .new directory outlives this call. On the happy
+		// path commitStaged has already renamed them away and this is a no-op.
+		for _, u := range all {
+			_ = os.RemoveAll(u.dir)
+		}
+	}()
 	for _, s := range ready {
-		bin, err := install(s.artefact, s.plan.Archive, s.plan.Scanner, tools)
+		dir, rel, err := unpackStaged(s.artefact, s.plan.Archive, s.plan.Scanner, tools)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", s.plan.Scanner, err)
 		}
-		lock.Tools[s.plan.Scanner] = LockEntry{
-			Version: s.plan.Version,
-			SHA256:  s.plan.SHA256,
-			Cosign:  cosignStatus(s.sigChecked),
+		all = append(all, unpacked{staged: s, dir: dir, rel: rel})
+	}
+
+	// Commit. This is the only step that touches an installed scanner, and it
+	// is now just a RemoveAll + Rename per tool. It is not a transaction — a
+	// failure part way still leaves earlier scanners replaced — but everything
+	// that can realistically fail (network, checksum, archive) has already
+	// happened by this point.
+	results := make([]Result, 0, len(all))
+	for _, u := range all {
+		bin, err := commitStaged(u.dir, filepath.Join(tools, u.plan.Scanner), u.rel)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", u.plan.Scanner, err)
 		}
-		results = append(results, Result{Plan: s.plan, BinPath: bin, SigChecked: s.sigChecked})
+		lock.Tools[u.plan.Scanner] = LockEntry{
+			Version: u.plan.Version,
+			SHA256:  u.plan.SHA256,
+			Cosign:  cosignStatus(u.sigChecked),
+			// Only Apply ever writes this, which is what makes --check able to
+			// tell "pinned in the lock" from "actually installed".
+			Installed: u.plan.Version,
+		}
+		results = append(results, Result{Plan: u.plan, BinPath: bin, SigChecked: u.sigChecked})
 	}
 	if err := SaveLock(LockPath(opts.Home), lock); err != nil {
 		return nil, err

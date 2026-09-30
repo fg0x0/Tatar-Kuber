@@ -21,7 +21,7 @@ TATAR-Kuber-ийн command-line интерфэйсийн эцсийн тодор
 |---|---|
 | tatar-kuber scan | Cluster эсвэл manifest-ийг шалгаж raw + scan-result.json цуглуулна |
 | tatar-kuber report | Цуглуулсан үр дүнгээс тайлан (json/sarif/html) үүсгэнэ |
-| tatar-kuber update | (v2-т ТӨЛӨВЛӨСӨН, v1-д хэрэгжээгүй) Scanner binary татах, checksum/cosign баталгаажуулах, tools.lock.yaml |
+| tatar-kuber update | Scanner binary татах, SHA256 checksum баталгаажуулах, tools.lock.yaml-д түгжих. --dry-run ба --check флагтай. cosign баталгаажуулалт хараахан хэрэгжээгүй (stub) бөгөөд tools.lock.yaml-д "unverified" гэж тэмдэглэгдэнэ. |
 | tatar-kuber version | TATAR болон scanner-уудын хувилбарыг харуулна |
 | tatar-kuber gate | scan-result.json-ыг .tatar-kuber.yaml бодлоготой тулгаж CI-д pass/fail (exit code) |
 | tatar-kuber doctor | Scanner binary суусан эсэх, хувилбар, дэмждэг горимыг шалгана |
@@ -160,7 +160,7 @@ Scan бүр дараах үе шатыг лог болгож бичнэ: START S
 
 ## Хувилбарын тэмдэглэл — v1.1 / v1.2 / v1.3 / v1.4 / v1.5 / v1.6
 
-- \`update\` команд нь v1-д ХЭРЭГЖЭЭГҮЙ. Өмнөх баримт --scanner/--check флагуудтай ажиллах команд шиг тайлбарласан байсан. Одоо exit 2 буцааж, scanner-уудыг өөрөө суулгаж \`doctor\`-оор шалгахыг зөвлөнө. v2-д: download -\> checksum/cosign -\> tools.lock.yaml.
+- \`update\` команд нь ЭХЛЭЭД v1-д ХЭРЭГЖЭЭГҮЙ байсан: exit 2 буцааж, scanner-уудыг гараар суулгаад \`doctor\`-оор шалгахыг зөвлөдөг байв. ОДОО хэрэгжсэн — download → SHA256 checksum → tools.lock.yaml, --dry-run ба --check флагтай. cosign нь stub хэвээр бөгөөд хэзээ ч "баталгаажсан" гэж хэлэхгүй.
 - Шинэ флаг --no-raw: live scan нь default-аар түүхий scanner гаралтыг \<out\>/raw/-д нотолгоо болгон хадгална (--raw-dir хүлээж авдаг яг тэр бүтэц тул дахин боловсруулж, аудит хийж болно).
 - \`gate\`-ийн --fail-on / --min-score нь ЗӨВХӨН хэрэглэгч тодорхой өгсөн үед .tatar-kuber.yaml-ыг дарна. Өмнө нь default утга (--min-score 0) бодлогын файлын утгыг үргэлж дарж, min_score утгагүй болж байв. Танигдахгүй fail_on-д анхааруулга хэвлэнэ.
 - Баримтад байгаагүй командууд бүртгэгдэв: gate, doctor, verify-lab. --scanners ба --timeout нь v1-д хэрэгжээгүй (adapter тус бүр өөрийн зөвлөмж timeout-той: Trivy 6m, Kubescape 4m, Checkov 3m, Popeye 90s).

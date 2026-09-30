@@ -13,6 +13,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 )
@@ -677,5 +678,156 @@ func TestApply_KeepsLockEntriesItDidNotTouch(t *testing.T) {
 	}
 	if lock.Tools["popeye"] != popeye {
 		t.Errorf("popeye entry = %+v, want %+v — an untouched pin was lost", lock.Tools["popeye"], popeye)
+	}
+}
+
+// A scanner whose archive unpacks fine must not be left replaced when a LATER
+// scanner's archive turns out to be unusable.
+//
+// The checksum tests above only prove the DOWNLOAD phase is all-or-nothing.
+// Installing inside the same loop that unpacked meant an artefact that passed
+// its checksum and then failed to unpack — a truncated or restructured release
+// — left the earlier scanners already swapped in: a half-updated toolchain,
+// reported to the operator as a plain error.
+func TestApply_AnUnusableArchiveLeavesTheOthersUntouched(t *testing.T) {
+	// trivy is already installed at 1.0.0 by a previous, successful run.
+	old := tarGzWith(t, "trivy", []byte("trivy 1.0.0"))
+	srvOld, _ := serveAssets(t, map[string][]byte{"/trivy-1.0.0.tar.gz": old})
+	useCatalogue(t, mockTool("trivy", "1.0.0", srvOld.URL+"/trivy-{v}.tar.gz", ArchiveTarGz))
+	home := t.TempDir()
+	if err := SaveLock(LockPath(home), Lock{Tools: map[string]LockEntry{
+		"trivy": {Version: "1.0.0", SHA256: sum(old)},
+	}}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Apply(context.Background(), opts(home, srvOld)); err != nil {
+		t.Fatalf("seeding the first install: %v", err)
+	}
+
+	// Now update trivy to 2.0.0 and install popeye alongside it — but popeye's
+	// artefact checksums correctly and does NOT contain a popeye binary.
+	newTrivy := tarGzWith(t, "trivy", []byte("trivy 2.0.0"))
+	noBinary := tarGzWith(t, "NOTICE", []byte("no popeye in here"))
+	srv, _ := serveAssets(t, map[string][]byte{
+		"/trivy-2.0.0.tar.gz":  newTrivy,
+		"/popeye-2.0.0.tar.gz": noBinary,
+	})
+	useCatalogue(t,
+		mockTool("trivy", "2.0.0", srv.URL+"/trivy-{v}.tar.gz", ArchiveTarGz),
+		mockTool("popeye", "2.0.0", srv.URL+"/popeye-{v}.tar.gz", ArchiveTarGz),
+	)
+	if err := SaveLock(LockPath(home), Lock{Tools: map[string]LockEntry{
+		"trivy":  {Version: "2.0.0", SHA256: sum(newTrivy), Installed: "1.0.0"},
+		"popeye": {Version: "2.0.0", SHA256: sum(noBinary)},
+	}}); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := Apply(context.Background(), opts(home, srv)); err == nil {
+		t.Fatal("Apply succeeded although popeye's artefact has no binary in it")
+	}
+
+	// trivy must still be the 1.0.0 that was working before this run.
+	bin := filepath.Join(ToolsDir(home), "trivy", "trivy")
+	got, err := os.ReadFile(bin)
+	if err != nil {
+		t.Fatalf("the already-installed trivy is gone: %v", err)
+	}
+	if string(got) != "trivy 1.0.0" {
+		t.Errorf("installed trivy = %q, want the untouched %q", got, "trivy 1.0.0")
+	}
+	// ...and no staging directory is left lying about.
+	if _, err := os.Stat(filepath.Join(ToolsDir(home), "trivy.new")); !os.IsNotExist(err) {
+		t.Errorf("trivy.new survived the failure: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(ToolsDir(home), "popeye.new")); !os.IsNotExist(err) {
+		t.Errorf("popeye.new survived the failure: %v", err)
+	}
+}
+
+// A version pinned in tools.lock.yaml is a REQUEST, not a record of an install.
+// Reading Plan.Installed off the same `version:` field made `update --check`
+// report a scanner as installed and up to date when nothing had ever been
+// downloaded — the worst possible answer, because it is the one an operator
+// acts on by doing nothing.
+func TestResolve_APinIsNotAnInstall(t *testing.T) {
+	useCatalogue(t, mockTool("trivy", "1.2.3", "https://example.invalid/trivy-{v}.tar.gz", ArchiveTarGz))
+	home := t.TempDir()
+	if err := SaveLock(LockPath(home), Lock{Tools: map[string]LockEntry{
+		"trivy": {Version: "1.2.3", SHA256: sum([]byte("x"))}, // pinned, never installed
+	}}); err != nil {
+		t.Fatal(err)
+	}
+	plans, err := Resolve(Options{Home: home, Platform: plat})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(plans) != 1 {
+		t.Fatalf("plans=%d", len(plans))
+	}
+	if plans[0].Version != "1.2.3" {
+		t.Errorf("Version = %q, want the pin 1.2.3", plans[0].Version)
+	}
+	if plans[0].Installed != "" {
+		t.Errorf("Installed = %q, want empty — nothing was ever installed, only pinned",
+			plans[0].Installed)
+	}
+}
+
+// After Apply, `installed` is written and --check can tell the two apart.
+func TestApply_RecordsWhatItInstalledSeparatelyFromThePin(t *testing.T) {
+	artefact := tarGzWith(t, "trivy", []byte("trivy"))
+	srv, _ := serveAssets(t, map[string][]byte{"/trivy-1.2.3.tar.gz": artefact})
+	useCatalogue(t, mockTool("trivy", "1.2.3", srv.URL+"/trivy-{v}.tar.gz", ArchiveTarGz))
+	home := t.TempDir()
+	if err := SaveLock(LockPath(home), Lock{Tools: map[string]LockEntry{
+		"trivy": {Version: "1.2.3", SHA256: sum(artefact)},
+	}}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Apply(context.Background(), opts(home, srv)); err != nil {
+		t.Fatal(err)
+	}
+	lock, err := LoadLock(LockPath(home))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if lock.Tools["trivy"].Installed != "1.2.3" {
+		t.Errorf("lock installed = %q, want 1.2.3", lock.Tools["trivy"].Installed)
+	}
+	plans, err := Resolve(Options{Home: home, Platform: plat})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if plans[0].Installed != "1.2.3" {
+		t.Errorf("Installed = %q after a real install, want 1.2.3", plans[0].Installed)
+	}
+}
+
+// Hex case is not part of a checksum. Release pages publish both, and rejecting
+// an upper-case pin as a MISMATCH reads as a supply-chain alarm rather than the
+// formatting difference it is.
+func TestApply_AnUpperCasePinIsNotAMismatch(t *testing.T) {
+	artefact := tarGzWith(t, "trivy", []byte("trivy"))
+	srv, _ := serveAssets(t, map[string][]byte{"/trivy-1.2.3.tar.gz": artefact})
+	useCatalogue(t, mockTool("trivy", "1.2.3", srv.URL+"/trivy-{v}.tar.gz", ArchiveTarGz))
+	home := t.TempDir()
+	if err := SaveLock(LockPath(home), Lock{Tools: map[string]LockEntry{
+		"trivy": {Version: "1.2.3", SHA256: strings.ToUpper(sum(artefact))},
+	}}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Apply(context.Background(), opts(home, srv)); err != nil {
+		t.Fatalf("Apply rejected a correct but upper-case checksum: %v", err)
+	}
+	// A genuinely wrong checksum is still a mismatch, whatever its case.
+	home2 := t.TempDir()
+	if err := SaveLock(LockPath(home2), Lock{Tools: map[string]LockEntry{
+		"trivy": {Version: "1.2.3", SHA256: strings.ToUpper(sum([]byte("something else")))},
+	}}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Apply(context.Background(), opts(home2, srv)); err == nil {
+		t.Fatal("a wrong upper-case checksum was accepted")
 	}
 }

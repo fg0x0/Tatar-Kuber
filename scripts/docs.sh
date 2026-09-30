@@ -34,12 +34,32 @@ case "${1:-}" in
   python3 "$root/scripts/docx-to-md.py" "$tmp"/*.docx >/dev/null
 
   status=0
+  count=0
   for docx in "$root"/docs/*.docx; do
     name="$(basename "$docx" .docx)"
+    count=$((count + 1))
     if ! diff -u \
       --label "docs/$name.md (committed)" \
       --label "docs/$name.md (regenerated from $name.docx)" \
       "$root/docs/$name.md" "$tmp/$name.md"; then
+      status=1
+    fi
+  done
+
+  # A .md whose .docx was deleted or renamed is invisible to the loop above --
+  # it compares generated against committed, and an orphan has nothing to
+  # generate from. Without this it would sit in docs/ for ever, looking like a
+  # spec, with no source and nothing keeping it true.
+  #
+  # Only files that CLAIM to be generated are candidates: docs/ also holds
+  # hand-written markdown (coverage.md, dedup-example.md, MITRE_ATTACK.md) that
+  # never had a .docx and must not be reported as orphaned.
+  for md in "$root"/docs/*.md; do
+    grep -q "by scripts/docx-to-md.py" "$md" || continue
+    name="$(basename "$md" .md)"
+    if [ ! -f "$root/docs/$name.docx" ]; then
+      echo "docs/$name.md has no docs/$name.docx — it is generated from nothing." >&2
+      echo "  Either restore the .docx or delete the .md." >&2
       status=1
     fi
   done
@@ -53,7 +73,7 @@ case "${1:-}" in
     echo "                              so a .md-only edit cannot survive)"
     exit 1
   fi
-  echo "docs/*.md matches docs/*.docx (6 documents)"
+  echo "docs/*.md matches docs/*.docx ($count documents)"
   ;;
 *)
   echo "usage: bash scripts/docs.sh [--check]" >&2
