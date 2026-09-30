@@ -50,17 +50,18 @@ type tool struct {
 // belongs in tools.lock.yaml where it is reviewable and diffable. A checksum
 // compiled into this binary would be a pin nobody ever reviews.
 //
-// The versions below are the ones the specification itself pins (Doc #5 §6).
-// They need a maintainer's refresh before `update` can be useful — see
-// BLOCKED.md. Nothing installs without a pinned checksum either way, so a
-// stale default here can only ever produce a refusal, never a bad binary.
+// The versions below were refreshed against each project's latest stable
+// release on 2026-09-30, and tools.lock.yaml at the repo root carries the
+// checksums that were cross-checked against what each project published.
+// Nothing installs without a pinned checksum either way, so a stale default
+// here can only ever produce a refusal, never a bad binary.
 //
 // A package-level var rather than a const so the tests can substitute a
 // catalogue that points at a httptest server: no test ever reaches the network.
 var catalogue = []tool{
 	{
 		Name:    "trivy",
-		Version: "0.53.0",
+		Version: "0.74.0",
 		Assets: map[string]asset{
 			"linux/amd64":  {URL: "https://github.com/aquasecurity/trivy/releases/download/v{v}/trivy_{v}_Linux-64bit.tar.gz", Archive: ArchiveTarGz},
 			"linux/arm64":  {URL: "https://github.com/aquasecurity/trivy/releases/download/v{v}/trivy_{v}_Linux-ARM64.tar.gz", Archive: ArchiveTarGz},
@@ -69,27 +70,30 @@ var catalogue = []tool{
 		},
 	},
 	{
-		Name:    "kubescape",
-		Version: "3.0.8",
+		Name: "kubescape",
+		// v4 renamed every asset: the v3 names (kubescape-ubuntu-latest,
+		// kubescape-arm64-macos-latest) no longer exist on any release.
+		Version: "4.0.15",
 		Assets: map[string]asset{
-			"linux/amd64":  {URL: "https://github.com/kubescape/kubescape/releases/download/v{v}/kubescape-ubuntu-latest", Archive: ArchiveRaw},
-			"linux/arm64":  {URL: "https://github.com/kubescape/kubescape/releases/download/v{v}/kubescape-arm64-ubuntu-latest", Archive: ArchiveRaw},
-			"darwin/amd64": {URL: "https://github.com/kubescape/kubescape/releases/download/v{v}/kubescape-macos-latest", Archive: ArchiveRaw},
-			"darwin/arm64": {URL: "https://github.com/kubescape/kubescape/releases/download/v{v}/kubescape-arm64-macos-latest", Archive: ArchiveRaw},
+			"linux/amd64":  {URL: "https://github.com/kubescape/kubescape/releases/download/v{v}/kubescape_{v}_linux_amd64", Archive: ArchiveRaw},
+			"linux/arm64":  {URL: "https://github.com/kubescape/kubescape/releases/download/v{v}/kubescape_{v}_linux_arm64", Archive: ArchiveRaw},
+			"darwin/amd64": {URL: "https://github.com/kubescape/kubescape/releases/download/v{v}/kubescape_{v}_darwin_amd64", Archive: ArchiveRaw},
+			"darwin/arm64": {URL: "https://github.com/kubescape/kubescape/releases/download/v{v}/kubescape_{v}_darwin_arm64", Archive: ArchiveRaw},
 		},
 	},
 	{
-		Name:    "checkov",
-		Version: "3.2.0",
+		Name: "checkov",
+		// The version is in the TAG only; the asset filenames carry none.
+		Version: "3.3.20",
 		Assets: map[string]asset{
-			"linux/amd64":  {URL: "https://github.com/bridgecrewio/checkov/releases/download/{v}/checkov_linux_X86_64_{v}.zip", Archive: ArchiveZip},
-			"linux/arm64":  {URL: "https://github.com/bridgecrewio/checkov/releases/download/{v}/checkov_linux_arm64_{v}.zip", Archive: ArchiveZip},
-			"darwin/amd64": {URL: "https://github.com/bridgecrewio/checkov/releases/download/{v}/checkov_darwin_X86_64_{v}.zip", Archive: ArchiveZip},
+			"linux/amd64":  {URL: "https://github.com/bridgecrewio/checkov/releases/download/{v}/checkov_linux_X86_64.zip", Archive: ArchiveZip},
+			"linux/arm64":  {URL: "https://github.com/bridgecrewio/checkov/releases/download/{v}/checkov_linux_arm64.zip", Archive: ArchiveZip},
+			"darwin/amd64": {URL: "https://github.com/bridgecrewio/checkov/releases/download/{v}/checkov_darwin_X86_64.zip", Archive: ArchiveZip},
 		},
 	},
 	{
 		Name:    "popeye",
-		Version: "0.21.5",
+		Version: "0.22.1",
 		Assets: map[string]asset{
 			"linux/amd64":  {URL: "https://github.com/derailed/popeye/releases/download/v{v}/popeye_linux_amd64.tar.gz", Archive: ArchiveTarGz},
 			"linux/arm64":  {URL: "https://github.com/derailed/popeye/releases/download/v{v}/popeye_linux_arm64.tar.gz", Archive: ArchiveTarGz},
