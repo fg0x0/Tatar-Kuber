@@ -141,8 +141,19 @@ type Result struct {
 	Score         int
 	MinScore      int
 	ScoreViolated bool
-	Reasons       []string
+
+	// Reasons — gate унасан шалтгаануудын ТОГТМОЛ КОД (бичвэр биш).
+	// CLI нь `--lang`-аар сонгогдсон хэл дээр хэвлэдэг тул шалтгааны бичвэр
+	// нэг л газар — CLI-ийн мессежийн каталогт — амьдрах ёстой. Кодод хэрэгтэй
+	// тоонууд (Violations, FailOn, Score, MinScore) энэ бүтцэд аль хэдийн бий.
+	Reasons []string
 }
+
+// Result.Reasons-д гарах кодууд.
+const (
+	ReasonThreshold = "threshold" // босго давсан олдвор бий
+	ReasonMinScore  = "min_score" // cluster score шаардсанаас доогуур
+)
 
 // Evaluate — scan үр дүнг бодлоготой тулгаж pass/fail шийднэ.
 func (p Policy) Evaluate(res finding.ScanResult, now time.Time) Result {
@@ -193,12 +204,12 @@ func (p Policy) Evaluate(res finding.ScanResult, now time.Time) Result {
 
 	if len(out.Violations) > 0 {
 		out.Passed = false
-		out.Reasons = append(out.Reasons, fmt.Sprintf("%d олдвор '%s' болон дээш түвшинд байна", len(out.Violations), p.FailOn))
+		out.Reasons = append(out.Reasons, ReasonThreshold)
 	}
 	if p.MinScore > 0 && res.Summary.RiskScore < p.MinScore {
 		out.Passed = false
 		out.ScoreViolated = true
-		out.Reasons = append(out.Reasons, fmt.Sprintf("cluster score %d < шаардлагатай %d", res.Summary.RiskScore, p.MinScore))
+		out.Reasons = append(out.Reasons, ReasonMinScore)
 	}
 	return out
 }

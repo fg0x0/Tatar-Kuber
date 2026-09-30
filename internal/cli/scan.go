@@ -158,9 +158,23 @@ func warnRuns(runs []finding.ScannerRun) {
 			fmt.Fprintf(os.Stderr, "scanner %-10s %-9s %s\n", r.Scanner, r.Status, r.Error)
 		}
 	}
-	for _, msg := range orchestrator.Problems(runs) {
-		fmt.Fprintln(os.Stderr, "анхаар:", msg)
+	for _, p := range orchestrator.Problems(runs) {
+		fmt.Fprintln(os.Stderr, "анхаар:", problemText(p))
 	}
+}
+
+// problemText — orchestrator-ийн анхааруулгын кодыг бичвэр болгоно. Тэр багц
+// нь БИЧВЭР биш, КОД буцаадаг тул хэрэглэгчид харагдах хэллэг CLI давхаргад л
+// амьдарна — нэг зүйлийг хоёр багцад зэрэг бичих нь тэднийг зөрүүлдэг.
+func problemText(p orchestrator.Problem) string {
+	if p.Code == orchestrator.ProblemNoFindings {
+		s := p.Scanner + ": ажилласан ч 0 finding normalize хийгдсэнгүй"
+		if p.Unmapped != "" {
+			s += " (canonical зураглалгүй rule: " + p.Unmapped + ")"
+		}
+		return s
+	}
+	return p.Scanner + ": " + p.Status + " — " + p.Error
 }
 
 // reportRollup — Pod -> controller зөөлтийг stderr-т мэдэгдэнэ. Тоо буурсан нь

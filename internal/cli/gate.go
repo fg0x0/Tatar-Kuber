@@ -135,17 +135,29 @@ func cmdGate(args []string) int {
 		fmt.Println("✓ GATE PASSED")
 		return 0
 	}
-	fmt.Println("✗ GATE FAILED —", joinReasons(r.Reasons))
+	fmt.Println("✗ GATE FAILED —", joinReasons(r))
 	return 1
 }
 
-func joinReasons(rs []string) string {
+// joinReasons — gate унасан шалтгаануудыг бичвэр болгож нийлүүлнэ.
+//
+// policy багц нь БИЧВЭР биш, тогтмол КОД буцаадаг болсон тул тоон утгуудыг
+// Result-аас нь энд авна: хэрэглэгчид харагдах хэллэг бүхэлдээ CLI давхаргад
+// амьдрах ёстой (diff.Warning аль хэдийн энэ зарчмаар ажилладаг).
+func joinReasons(r policy.Result) string {
 	out := ""
-	for i, r := range rs {
+	for i, code := range r.Reasons {
 		if i > 0 {
 			out += "; "
 		}
-		out += r
+		switch code {
+		case policy.ReasonThreshold:
+			out += fmt.Sprintf("%d олдвор '%s' болон дээш түвшинд байна", len(r.Violations), r.FailOn)
+		case policy.ReasonMinScore:
+			out += fmt.Sprintf("cluster score %d < шаардлагатай %d", r.Score, r.MinScore)
+		default:
+			out += code
+		}
 	}
 	return out
 }
