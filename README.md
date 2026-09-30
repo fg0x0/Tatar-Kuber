@@ -23,8 +23,12 @@ tatar-kuber report --input out/scan-result.json --format html --out report.html
 tatar-kuber report --input out/scan-result.json --format html --lang mn --out mn.html
 ```
 
-One scan, either language: `--lang` lives on `report`, so switching language never
-re-runs the scanners or touches the cluster again.
+One scan, either language: `report` takes `--lang` too, so switching the report's
+language never re-runs the scanners or touches the cluster again.
+
+The CLI itself is **English by default** — usage, every flag description, errors, the
+per-scanner progress lines and the gate verdict. `--lang mn` (or `TATAR_LANG=mn`)
+switches all of it to Mongolian.
 
 ## Report — one issue, every scanner, both languages
 
@@ -215,22 +219,32 @@ go test ./...          # 18 packages, all green
 ## CLI
 
 ```
-tatar-kuber scan        --kubeconfig | --context | -f | --raw-dir  [--out-dir DIR] [--namespace ns1,ns2] [--lang en|mn] [--no-raw] [--no-rollup]
+tatar-kuber scan        --kubeconfig | --context | -f | --raw-dir  [--out-dir DIR] [--namespace ns1,ns2] [--no-raw] [--no-rollup]
                         # live scan keeps raw scanner output in <out>/raw/ (evidence; re-ingestable via --raw-dir)
 tatar-kuber report      --input scan-result.json --format json | sarif | html  [--out FILE] [--fail-on high]
 tatar-kuber gate        --input scan-result.json [--policy .tatar-kuber.yaml] [--fail-on high] [--min-score N]
-                        # --baseline prev/scan-result.json [--lang en|mn] : fail only on NEW and WORSENED
+                        # --baseline prev/scan-result.json : fail only on NEW and WORSENED
 tatar-kuber doctor      # which scanners are installed, versions, supported modes
 tatar-kuber diff        --old prev/scan-result.json --new out/scan-result.json
                         # trending: new / fixed / worsened / improved  [--fail-on-new high] [--format json]
 tatar-kuber verify-lab  --input scan-result.json --expected expected-findings.json
 tatar-kuber version
+
+every command also accepts   [--lang en|mn]
 ```
 
 `scan --out-dir` is a **directory**; `report --format` / `diff --format` is a **format**. Both
 still accept the older `-o` spelling, so existing pipelines keep working — but `-o` meant two
 different things depending on the command, so the long names are what the docs use. Severity
 thresholds (`--fail-on`, `--fail-on-new`, `fail_on:`) are case-insensitive.
+
+**Output language.** Everything the tool prints is **English by default**. `--lang mn`
+switches all of it — usage, flag descriptions, errors, progress and gate verdicts — to
+Mongolian, and `TATAR_LANG=mn` sets it for a whole session (the flag wins over the
+environment). Every command takes `--lang`, and an unknown value is a usage error
+(exit `3`) on every one of them. On `report`, `--lang` re-renders the report itself as
+well; without it the report keeps the language chosen at scan time, so existing
+pipelines are unaffected.
 
 ### Live Mode B — granting read-only access
 
@@ -544,8 +558,12 @@ tatar-kuber verify-lab --input lab-out/scan-result.json \
     --expected tatar-kuber-lab/expected/expected-findings.json
 ```
 
-Нэг scan, аль ч хэл: `--lang` нь `report` дээр байдаг тул хэл сэлгэхэд scanner-ууд
-дахин ажиллахгүй, cluster руу дахин хандахгүй.
+Нэг scan, аль ч хэл: `report` ч `--lang` авдаг тул тайлангийн хэлийг сэлгэхэд
+scanner-ууд дахин ажиллахгүй, cluster руу дахин хандахгүй.
+
+CLI өөрөө default-оор **англи** хэлээр ярина — usage, флаг бүрийн тайлбар, алдаа,
+scanner тус бүрийн явцын мөр, gate-ийн шийдвэр. `--lang mn` (эсвэл `TATAR_LANG=mn`)
+нь бүгдийг монгол руу сэлгэнэ.
 
 ### Архитектур
 
@@ -570,22 +588,31 @@ tatar-kuber verify-lab --input lab-out/scan-result.json \
 ### CLI командууд
 
 ```
-tatar-kuber scan        --kubeconfig | --context | -f | --raw-dir  [--out-dir DIR] [--namespace ns1,ns2] [--lang en|mn] [--no-raw] [--no-rollup]
+tatar-kuber scan        --kubeconfig | --context | -f | --raw-dir  [--out-dir DIR] [--namespace ns1,ns2] [--no-raw] [--no-rollup]
                         # live scan нь scanner-уудын түүхий гаралтыг <out>/raw/-д хадгална (нотолгоо; --raw-dir-ээр дахин боловсруулна)
 tatar-kuber report      --input scan-result.json --format json | sarif | html  [--out FILE] [--fail-on high]
 tatar-kuber gate        --input scan-result.json [--policy .tatar-kuber.yaml] [--fail-on high] [--min-score N]
-                        # --baseline prev/scan-result.json [--lang en|mn] : зөвхөн шинэ ба дордсон finding дээр fail болно
+                        # --baseline prev/scan-result.json : зөвхөн шинэ ба дордсон finding дээр fail болно
 tatar-kuber doctor      # ямар scanner суусан, хувилбар, дэмжих горим
 tatar-kuber diff        --old prev/scan-result.json --new out/scan-result.json
                         # тренд: шинэ / зассан / дордсон / сайжирсан  [--fail-on-new high] [--format json]
 tatar-kuber verify-lab  --input scan-result.json --expected expected-findings.json
 tatar-kuber version
+
+команд бүр мөн хүлээж авна   [--lang en|mn]
 ```
 
 `scan --out-dir` нь **хавтас**, `report --format` / `diff --format` нь **формат**. Хоёул `-o`
 гэсэн хуучин бичиглэлээ хэвээр хүлээж авна (байгаа pipeline эвдрэхгүй) — гэхдээ `-o` нь
 командаас хамаарч хоёр өөр зүйл гэсэн утгатай байсан тул баримтад бүтэн нэрийг ашиглана.
 Severity босго (`--fail-on`, `--fail-on-new`, `fail_on:`) нь үсгийн том/жижигт үл хамаарна.
+
+**Гаралтын хэл.** Хэрэгслийн хэвлэдэг бүх зүйл default-оор **англи**. `--lang mn` нь
+бүгдийг — usage, флагийн тайлбар, алдаа, явцын мөр, gate-ийн шийдвэрийг — монгол руу
+сэлгэнэ, `TATAR_LANG=mn` нь бүтэн session-д тавина (флаг нь орчны хувьсагчийг дарна).
+`--lang`-ыг команд бүр хүлээж авах бөгөөд танигдаагүй утга нь команд бүрт хэрэглээний
+алдаа (exit `3`). `report` дээр `--lang` нь тайланг өөрийг нь ч дахин үүсгэнэ; өгөөгүй
+бол тайлан scan-д сонгосон хэлээрээ үлдэх тул байгаа pipeline хөндөгдөхгүй.
 
 ### Live Mode B — read-only хандалт олгох
 
