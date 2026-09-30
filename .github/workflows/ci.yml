@@ -34,6 +34,16 @@ jobs:
       - name: Validate canonical registry
         run: python3 scripts/validate_registry.py
 
+      # The .docx and the .md of each engineering document are BOTH committed
+      # and either one may be edited (CONTRIBUTING.md), so the pair has to be
+      # back in sync before merge. Checked by CONTENT — regenerate the Markdown
+      # and compare — never by modification time: git does not store
+      # timestamps, so after a fresh clone every file carries the checkout time
+      # and an mtime comparison would pass or fail at random. Content also
+      # catches the case that matters, a .md edited by hand.
+      - name: Docs in sync (.docx -> .md)
+        run: bash scripts/docs.sh --check
+
   security:
     runs-on: ubuntu-latest
     permissions:
