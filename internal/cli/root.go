@@ -38,8 +38,7 @@ func Execute() int {
 	case "verify-lab":
 		return cmdVerifyLab(args[2:])
 	case "update":
-		fmt.Fprintln(os.Stderr, msg("cmd.update.todo"))
-		return 2
+		return cmdUpdate(args[2:])
 	case "version":
 		fmt.Printf("TATAR-Kuber %s\n", Version)
 		return 0

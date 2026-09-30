@@ -19,7 +19,7 @@ TATAR-Kuber is early-stage and there is lots of high-impact work available.
 ```bash
 git clone https://github.com/ochmunkh/Tatar-Kuber && cd Tatar-Kuber
 go build ./...
-go test ./...          # 18 packages, must stay green
+go test ./...          # 19 packages, must stay green
 python3 scripts/validate_registry.py   # canonical registry sanity
 ```
 
@@ -100,7 +100,7 @@ release tooling. `TestVersionsAgree` catches the two that matter; the rest are m
 Then:
 
 ```bash
-go test ./...                      # 18 packages, including the golden corpus
+go test ./...                      # 19 packages, including the golden corpus
 git tag -a vX.Y.Z -m "..." && git push origin vX.Y.Z
 ```
 

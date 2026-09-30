@@ -201,6 +201,11 @@ func TestEveryCommandAcceptsLang(t *testing.T) {
 		}},
 		{"diff", func(l string) int { return cmdDiff([]string{"--old", res, "--new", res, "--lang", l}) }},
 		{"doctor", func(l string) int { return cmdDoctor([]string{"--lang", l}) }},
+		// `--dry-run` нь сүлжээнд хүрэхгүй; `--scanner trivy` нь дөрвөн
+		// платформ дэмждэг тул тест ажиллуулагч машинаас хамаарахгүй.
+		{"update", func(l string) int {
+			return cmdUpdate([]string{"--scanner", "trivy", "--dry-run", "--home", filepath.Join(out, "home"), "--lang", l})
+		}},
 		{"verify-lab", func(l string) int {
 			return cmdVerifyLab([]string{"--input", res, "--expected", expected, "--lang", l})
 		}},

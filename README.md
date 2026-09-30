@@ -7,7 +7,7 @@
 ![Output](https://img.shields.io/badge/output-JSON%20%C2%B7%20SARIF%20%C2%B7%20HTML-1F6F54)
 [![CI](https://github.com/ochmunkh/Tatar-Kuber/actions/workflows/ci.yml/badge.svg)](https://github.com/ochmunkh/Tatar-Kuber/actions/workflows/ci.yml)
 [![Real cluster](https://github.com/ochmunkh/Tatar-Kuber/actions/workflows/real-cluster.yml/badge.svg)](https://github.com/ochmunkh/Tatar-Kuber/actions/workflows/real-cluster.yml)
-![Tests](https://img.shields.io/badge/tests-18%20packages%20green-brightgreen)
+![Tests](https://img.shields.io/badge/tests-19%20packages%20green-brightgreen)
 ![Release](https://img.shields.io/badge/release-v1.0.3-brightgreen)
 
 **Kubernetes security posture assessment framework — one command, four scanners, one standard report.**
@@ -212,7 +212,7 @@ sources → scanners (parallel) → normalize → canonical + dedup → blind-sh
 
 ```bash
 go build ./...
-go test ./...          # 18 packages, all green
+go test ./...          # 19 packages, all green
 ./scripts/build.sh 1.0.3
 ```
 
@@ -228,6 +228,7 @@ tatar-kuber doctor      # which scanners are installed, versions, supported mode
 tatar-kuber diff        --old prev/scan-result.json --new out/scan-result.json
                         # trending: new / fixed / worsened / improved  [--fail-on-new high] [--format json]
 tatar-kuber verify-lab  --input scan-result.json --expected expected-findings.json
+tatar-kuber update      [--scanner trivy,popeye] [--dry-run] [--check] [--home ~/.tatar-kuber]
 tatar-kuber version
 
 every command also accepts   [--lang en|mn]
@@ -237,6 +238,16 @@ every command also accepts   [--lang en|mn]
 still accept the older `-o` spelling, so existing pipelines keep working — but `-o` meant two
 different things depending on the command, so the long names are what the docs use. Severity
 thresholds (`--fail-on`, `--fail-on-new`, `fail_on:`) are case-insensitive.
+
+**Updating the scanners.** `tatar-kuber update` downloads each scanner, checks its SHA256
+against the pin in `~/.tatar-kuber/tools.lock.yaml`, and only then installs it. A mismatch
+installs nothing at all — not even the scanners that did verify — and a scanner with no
+pinned checksum is refused *before* the download is made, so there is no trust-on-first-use
+path. `--dry-run` prints exactly what would be fetched (scanner, version, URL, expected
+checksum) and writes nothing; `--check` compares the pins with what the lock records as
+installed. The cosign step of the specification is **not implemented yet**: signatures are
+not verified, the command says so on every run, and `tools.lock.yaml` records
+`cosign: unverified` rather than claiming otherwise.
 
 **Output language.** Everything the tool prints is **English by default**. `--lang mn`
 switches all of it — usage, flag descriptions, errors, progress and gate verdicts — to
@@ -604,6 +615,7 @@ tatar-kuber doctor      # ямар scanner суусан, хувилбар, дэ�
 tatar-kuber diff        --old prev/scan-result.json --new out/scan-result.json
                         # тренд: шинэ / зассан / дордсон / сайжирсан  [--fail-on-new high] [--format json]
 tatar-kuber verify-lab  --input scan-result.json --expected expected-findings.json
+tatar-kuber update      [--scanner trivy,popeye] [--dry-run] [--check] [--home ~/.tatar-kuber]
 tatar-kuber version
 
 команд бүр мөн хүлээж авна   [--lang en|mn]
@@ -729,7 +741,7 @@ docker run --rm -v "$PWD:/work" -w /work ghcr.io/ochmunkh/tatar-kuber:latest sca
 
 ```bash
 go build ./...
-go test ./...          # 18 багц, бүгд ногоон
+go test ./...          # 19 багц, бүгд ногоон
 ./scripts/build.sh 1.0.3
 ```
 

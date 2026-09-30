@@ -167,6 +167,10 @@ func addLangFlag(fs *flag.FlagSet, helpID string) {
 // ил бүртгэсний учир: (1) каталог бүрэн эсэхийг тест шалгах боломжтой хэвээр
 // үлдэнэ, (2) дутууг нь код уншилгүйгээр харж, монгол хэлээр чөлөөтэй бичдэг
 // хүн нэг файл дотор нөхөх боломжтой. Орчуулгыг машинаар ХИЙХГҮЙ.
+// `update` (v2) нь БҮХЭЛДЭЭ англи хэлээр нэмэгдэв: шинэ бичвэрийг машинаар
+// орчуулахгүй гэсэн дээрх шийдвэр хэвээр. Утга нь орчуулах зүйлгүй (зөвхөн
+// баганын зэрэгцүүлэлт, `url`, `sha256`) мөрүүд нь en/mn ижил бичигдсэн тул
+// энд ОРООГҮЙ — тэдгээр нь дутуу биш, орчуулах зүйлгүй.
 var awaitingMN = map[string]bool{
 	"verify.controls":       true,
 	"verify.count":          true,
@@ -174,6 +178,22 @@ var awaitingMN = map[string]bool{
 	"verify.min":            true,
 	"verify.missing.header": true,
 	"verify.total":          true,
+
+	"err.update.scanner.unknown": true,
+	"flag.update.check":          true,
+	"flag.update.dryrun":         true,
+	"flag.update.home":           true,
+	"flag.update.scanner":        true,
+	"update.check.absent":        true,
+	"update.check.changes":       true,
+	"update.check.header":        true,
+	"update.check.uptodate":      true,
+	"update.col.pinned":          true,
+	"update.cosign.stub":         true,
+	"update.dryrun.header":       true,
+	"update.installed":           true,
+	"update.installed.header":    true,
+	"update.plan.unpinned":       true,
 }
 
 // catalog — CLI-ийн бүх хэрэглэгчид харагдах бичвэр. mn нь энэ өөрчлөлтөөс
@@ -193,13 +213,6 @@ var catalog = map[string]canonical.I18n{
 		"en": "unknown language '%s' (available: %s)",
 		"mn": "'%s' хэл танигдсангүй (байгаа: %s)",
 	},
-	"cmd.update.todo": {
-		"en": "update: not implemented in v1 (planned: download -> checksum/cosign verification -> tools.lock.yaml). " +
-			"For now install the scanners yourself and check them with `tatar-kuber doctor`.",
-		"mn": "update: v1-д хэрэгжээгүй (төлөвлөгөө: download -> checksum/cosign баталгаажуулалт -> tools.lock.yaml). " +
-			"Одоогоор scanner-уудыг өөрөө суулгаж `tatar-kuber doctor`-оор шалгана уу.",
-	},
-
 	// ── Флагийн тайлбар ────────────────────────────────────────────────────
 	"flag.lang": {
 		"en": "output language: en | mn (default: en; $TATAR_LANG is honoured too)",
@@ -325,6 +338,19 @@ var catalog = map[string]canonical.I18n{
 	"flag.verify.expected": {
 		"en": "path to expected-findings.json",
 		"mn": "expected-findings.json зам",
+	},
+
+	"flag.update.scanner": {
+		"en": "scanners to update (comma-separated; default: all)",
+	},
+	"flag.update.dryrun": {
+		"en": "print what WOULD be downloaded and stop — nothing is downloaded, nothing is written",
+	},
+	"flag.update.check": {
+		"en": "compare the pinned versions with tools.lock.yaml and stop — nothing is downloaded, nothing is written",
+	},
+	"flag.update.home": {
+		"en": "directory holding tools.lock.yaml and tools/ (default: ~/.tatar-kuber; $TATAR_HOME is honoured too)",
 	},
 
 	// ── util / pipeline ────────────────────────────────────────────────────
@@ -517,6 +543,54 @@ var catalog = map[string]canonical.I18n{
 		"mn": "%d scanner бэлэн. Live scan: tatar-kuber scan --kubeconfig ~/.kube/config\n",
 	},
 
+	// ── update ─────────────────────────────────────────────────────────────
+	//
+	// Багана/зэрэгцүүлэлтийн хэлбэрийг `doctor` оруулсан тул түүнийг дагана
+	// (мөн "INSTALLED" баганын нэр нь тэндээс ДАХИН ашиглагдана — нэг үгийг
+	// хоёр удаа орчуулах шалтгаан алга).
+	"update.dryrun.header": {
+		"en": "update — dry run: nothing is downloaded, nothing is written\n\n",
+	},
+	"update.plan.scanner": {"en": "  %-11s %-10s %s\n", "mn": "  %-11s %-10s %s\n"},
+	"update.plan.url":     {"en": "    url     %s\n", "mn": "    url     %s\n"},
+	"update.plan.sha":     {"en": "    sha256  %s\n", "mn": "    sha256  %s\n"},
+	"update.plan.unpinned": {
+		"en": "    sha256  NOT PINNED — update would refuse to install this scanner (pin it in %s)\n",
+	},
+	"update.check.header": {
+		"en": "update --check — the pinned versions against %s\n\n",
+	},
+	"update.col.pinned": {"en": "PINNED"},
+	"update.check.line": {"en": "  %-11s %-10s %-10s %s\n", "mn": "  %-11s %-10s %-10s %s\n"},
+	"update.check.uptodate": {
+		"en": "up to date",
+	},
+	"update.check.absent": {
+		"en": "not installed by update",
+	},
+	"update.check.changes": {
+		"en": "would be replaced",
+	},
+	"update.installed.header": {
+		"en": "update: %d scanner(s) verified and installed into %s\n",
+	},
+	"update.installed": {
+		"en": "  %-11s %-10s installed: %s\n",
+	},
+	// Стаб нь баталгаажуулсан гэж ХЭЛЖ БОЛОХГҮЙ — энэ мөр нь гарын үсэг
+	// шалгагдаагүйг ил хэлнэ (tools.lock.yaml ч мөн адил бичнэ).
+	"update.cosign.stub": {
+		"en": "cosign signature verification is NOT implemented yet (planned for v2) — a scanner is accepted " +
+			"on its pinned SHA256 alone, and tools.lock.yaml records cosign: unverified for it",
+	},
+	"update.lock.wrote": {
+		"en": "tools.lock.yaml written: %s",
+		"mn": "tools.lock.yaml бичигдлээ: %s",
+	},
+	"err.update.scanner.unknown": {
+		"en": "unknown scanner '%s' (known: %s)",
+	},
+
 	// ── verify-lab ─────────────────────────────────────────────────────────
 	//
 	// Эдгээрийн ихэнх нь энэ өөрчлөлтөөс ӨМНӨ Ч англи хэлээр л гардаг байсан;
@@ -552,7 +626,7 @@ Commands:
   diff      Compare two scan-result.json files: what is new / fixed / worsened
   doctor    Which scanner binaries are installed, their versions and supported modes
   verify-lab Check a scan against expected-findings.json (regression)
-  update    (planned, v2) Download, verify and update the scanner binaries
+  update    Download, verify and update the scanner binaries
   version   Print the version
 
 Global flags (accepted by every command):
@@ -591,7 +665,7 @@ Commands:
   diff      Хоёр scan-result.json-ыг тулгаж юу шинэ / зассан / дордсоныг харуулна
   doctor    Scanner binary-ууд суусан эсэх, хувилбар, горимыг шалгана
   verify-lab expected-findings.json-той тулгаж regression шалгана
-  update    (төлөвлөсөн, v2) Scanner binary-уудыг татаж, баталгаажуулж шинэчилнэ
+  update    Scanner binary-уудыг татаж, баталгаажуулж шинэчилнэ
   version   Хувилбар харуулна
 
 Ерөнхий флаг (бүх команд хүлээж авна):
