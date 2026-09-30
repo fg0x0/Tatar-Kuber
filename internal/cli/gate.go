@@ -21,9 +21,10 @@ func cmdGate(args []string) int {
 	fs := flag.NewFlagSet("gate", flag.ExitOnError)
 	input := fs.String("input", "scan-result.json", "scan-result.json зам")
 	policyPath := fs.String("policy", ".tatar-kuber.yaml", "бодлогын файл")
-	failOn := fs.String("fail-on", "", "severity босго (файлыг дарна): critical|high|medium|low")
+	failOn := fs.String("fail-on", "", "severity босго (файлыг дарна): critical|high|medium|low (үсгийн том/жижигт үл хамаарна)")
 	minScore := fs.Int("min-score", 0, "cluster score доод хязгаар (файлыг дарна; 0 = хэрэгсэхгүй)")
 	baseline := fs.String("baseline", "", "өмнөх scan-result.json — зөвхөн ШИНЭ ба ДОРДСОН олдворт унана")
+	lang := fs.String("lang", "mn", "--baseline-ийн анхааруулгын хэл: mn|en (diff-тэй ижил)")
 	_ = fs.Parse(args)
 	// Флагийг ЗӨВХӨН хэрэглэгч тодорхой өгсөн үед policy файлыг дарна. Өмнө нь
 	// default утга (--min-score 0, action.yml-ийн --fail-on high) файлын утгыг
@@ -64,7 +65,7 @@ func cmdGate(args []string) int {
 	// унтраахаас сэргийлэх зорилготой — унтраасан gate бол gate биш.
 	baselineNote := ""
 	if *baseline != "" {
-		note, code := applyBaseline(&r, pol, res, *baseline)
+		note, code := applyBaseline(&r, pol, res, *baseline, *lang)
 		if code != 0 {
 			return code
 		}
@@ -167,7 +168,7 @@ var baselineUntrusted = map[string]bool{
 // Suppression-ий бүртгэлийг (хугацаа дууссан / тохироогүй дүрэм) БҮТЭН олдворын
 // жагсаалт дээр тооцсон хэвээр үлдээнэ — эс бөгөөс baseline-д байсан finding-ийг
 // хаадаг дүрэм бүр "ямар ч олдворт тохироогүй" гэж худал анхааруулагдана.
-func applyBaseline(r *policy.Result, pol policy.Policy, res finding.ScanResult, path string) (string, int) {
+func applyBaseline(r *policy.Result, pol policy.Policy, res finding.ScanResult, path, lang string) (string, int) {
 	base, code := loadScan(path)
 	if code != 0 {
 		return "", code
@@ -177,7 +178,7 @@ func applyBaseline(r *policy.Result, pol policy.Policy, res finding.ScanResult, 
 
 	var blockers []string
 	for _, w := range d.Warnings {
-		fmt.Fprintf(os.Stderr, "анхаар: baseline — %s\n", w.Text("mn"))
+		fmt.Fprintf(os.Stderr, "анхаар: baseline — %s\n", w.Text(lang))
 		if baselineUntrusted[w.Code] {
 			blockers = append(blockers, w.Code)
 		}

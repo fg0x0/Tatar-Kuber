@@ -19,7 +19,7 @@ TATAR-Kuber is early-stage and there is lots of high-impact work available.
 ```bash
 git clone https://github.com/ochmunkh/Tatar-Kuber && cd Tatar-Kuber
 go build ./...
-go test ./...          # 15 packages, must stay green
+go test ./...          # 18 packages, must stay green
 python3 scripts/validate_registry.py   # canonical registry sanity
 ```
 
@@ -37,7 +37,8 @@ A maintainer will review. Please be patient and kind — see the Code of Conduct
 
 ## Adding a scanner adapter (step by step)
 
-This is the recommended first contribution. See `docs/03-Scanner-Adapter-Interface.md`.
+This is the recommended first contribution. See `docs/03_Scanner-Adapter-Interface.docx`
+(a Word file — GitHub will not render it in the browser, so download it).
 
 1. Create `internal/scanner/<name>/<name>.go` implementing `scanner.ScannerAdapter`
    (`Name`, `Available`, `Version`, `Supports`, `Scan`, `Normalize`).
@@ -99,7 +100,7 @@ release tooling. `TestVersionsAgree` catches the two that matter; the rest are m
 Then:
 
 ```bash
-go test ./...                      # 17 packages, including the golden corpus
+go test ./...                      # 18 packages, including the golden corpus
 git tag -a vX.Y.Z -m "..." && git push origin vX.Y.Z
 ```
 

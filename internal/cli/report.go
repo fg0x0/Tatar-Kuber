@@ -17,9 +17,14 @@ import (
 func cmdReport(args []string) int {
 	fs := flag.NewFlagSet("report", flag.ExitOnError)
 	input := fs.String("input", "scan-result.json", "scan-result.json зам")
-	format := fs.String("o", "html", "формат: json|sarif|html")
+	// --format нь -o-ийн бүтэн нэр. `scan -o` бол ХАВТАС, `report -o` бол ФОРМАТ
+	// байсан тул README-ийн хажуу хажуугийн хоёр мөрөнд нэг флаг хоёр өөр зүйл
+	// гэж харагдаж байв. -o хэвээр ажиллана (CI эвдрэхгүй), харин баримтад
+	// бүтэн нэрийг ашиглана.
+	format := fs.String("o", "html", "формат: json|sarif|html (бүтэн нэр: --format)")
+	fs.StringVar(format, "format", "html", "формат: json|sarif|html (-o-ийн бүтэн нэр)")
 	out := fs.String("out", "", "гаралтын файл (default: stdout, html бол report.html)")
-	failOn := fs.String("fail-on", "", "энэ severity-с дээш finding байвал exit 1: CRITICAL|HIGH|MEDIUM|LOW")
+	failOn := fs.String("fail-on", "", "энэ severity-с дээш finding байвал exit 1: critical|high|medium|low (үсгийн том/жижигт үл хамаарна)")
 	lang := fs.String("lang", "", "тайлангийн хэл: en | mn (default: scan-д сонгосон хэл)")
 	registry := fs.String("registry", "", "canonical-controls.yaml зам (--lang-тай хамт; default: шигтгэсэн)")
 	_ = fs.Parse(args)
@@ -78,8 +83,14 @@ func cmdReport(args []string) int {
 		fmt.Println("тайлан бичигдлээ:", target)
 	}
 
-	if *failOn != "" && exceedsThreshold(res, finding.Severity(*failOn)) {
-		return 1
+	// Босгыг ШУУД finding.Severity() болгож хөрвүүлэхгүй: "critical" (жижиг
+	// үсгээр — action.yml, .tatar-kuber.yaml.example, README бүгд ингэж бичдэг)
+	// нь Rank 0 болж, `>= 0` нь INFO хүртэл БҮХ finding-тэй таарч, "high-аас
+	// дээшид унана" гэсэн gate "бүхэнд унана" болж хувирдаг байв.
+	if *failOn != "" {
+		if th, ok := parseSeverityThreshold(*failOn, "--fail-on"); ok && exceedsThreshold(res, th) {
+			return 1
+		}
 	}
 	return 0
 }

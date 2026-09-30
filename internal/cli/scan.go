@@ -21,12 +21,17 @@ func cmdScan(args []string) int {
 	namespaces := fs.String("namespace", "", "хязгаарлах namespace-ууд (таслалаар, Mode B)")
 	rawDir := fs.String("raw-dir", "", "цуглуулсан scanner raw JSON-уудын хавтас (offline ingest)")
 	cluster := fs.String("cluster", "cluster", "cluster/target нэр (тайланд)")
-	outDir := fs.String("o", ".", "гаралтын хавтас")
+	outDir := fs.String("o", ".", "гаралтын ХАВТАС (бүтэн нэр: --out-dir)")
+	fs.StringVar(outDir, "out-dir", ".", "гаралтын ХАВТАС (-o-ийн бүтэн нэр)")
 	registry := fs.String("registry", "", "canonical-controls.yaml зам")
 	lang := fs.String("lang", "en", "тайлангийн хэл: en | mn")
 	noRaw := fs.Bool("no-raw", false, "live scan-д scanner-уудын түүхий гаралтыг <out>/raw/ дотор ХАДГАЛАХГҮЙ (default: хадгална — нотолгоо)")
 	noRollup := fs.Bool("no-rollup", false, "Pod хэмжээний finding-ийг эзэмшигч controller руу ЗӨӨХГҮЙ (default: зөөнө — нэг зөрчил нэг удаа тоологдоно)")
 	_ = fs.Parse(args)
+
+	if code := rejectFormatAsOutDir(*outDir); code != 0 {
+		return code
+	}
 
 	regPath, err := resolveRegistry(*registry)
 	if err != nil {
@@ -105,6 +110,35 @@ func cmdScan(args []string) int {
 		fmt.Fprintln(os.Stderr, "анхаар: ямар ч scanner ажиллаагүй (scanner binary суулгасан эсэхээ `tatar-kuber doctor`-оор шалгана уу). Offline горим: --raw-dir")
 	}
 	return writeResult(r, *outDir)
+}
+
+// reportFormats — форматын нэр -> тэр форматыг ҮНЭХЭЭР хүлээж авдаг команд
+// (scan-ийн хавтас БИШ). `report` нь json|sarif|html, `diff` нь text|json тул
+// "text"-ийг `report`-т заавал exit 3-тай ХОЁР ДАХЬ буруу команд болно —
+// алдааны мөр нь хэрэглэгчийг ажилладаг команд руу л чиглүүлэх ёстой.
+var reportFormats = map[string]string{
+	"json":  "report",
+	"sarif": "report",
+	"html":  "report",
+	"text":  "diff",
+}
+
+// rejectFormatAsOutDir — `scan -o html` нь өмнө нь exit 0 буцааж, "html" нэртэй
+// ХАВТАС үүсгэж, scan-result.json-ыг хэрэглэгчийн хүлээгээгүй газар бичдэг байв:
+// ямар ч анхааруулгагүй, "амжилттай" харагдах бүтэлгүйтэл. "0 finding-тэй
+// scanner хэзээ ч чимээгүй өнгөрөхгүй" гэсэн өөрийн стандарттаа нийцэхгүй.
+//
+// Үнэхээр тэр нэртэй хавтас хэрэгтэй бол зам хэлбэрээр (`-o ./html`) өгнө —
+// false positive-ыг зориуд нарийн барьсан.
+func rejectFormatAsOutDir(dir string) int {
+	cmd, isFormat := reportFormats[dir]
+	if !isFormat {
+		return 0
+	}
+	fmt.Fprintf(os.Stderr, "алдаа: scan -o/--out-dir нь ГАРАЛТЫН ХАВТАС хүлээдэг, формат биш ('%s').\n"+
+		"       Формат нь тайлангийн зүйл: tatar-kuber %s --format %s\n"+
+		"       Үнэхээр '%s' нэртэй хавтас хэрэгтэй бол: -o ./%s\n", dir, cmd, dir, dir, dir)
+	return 3
 }
 
 // warnRuns — scanner бүрийн явцыг stderr-т нэг мөрөөр, асуудалтайг нь тодруулж хэвлэнэ.

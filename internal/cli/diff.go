@@ -48,7 +48,8 @@ func cmdDiff(args []string) int {
 	fs := flag.NewFlagSet("diff", flag.ExitOnError)
 	oldPath := fs.String("old", "", "өмнөх scan-result.json (заавал)")
 	newPath := fs.String("new", "", "шинэ scan-result.json (заавал)")
-	format := fs.String("o", "text", "гаралт: text|json")
+	format := fs.String("o", "text", "гаралт: text|json (бүтэн нэр: --format)")
+	fs.StringVar(format, "format", "text", "гаралт: text|json (-o-ийн бүтэн нэр)")
 	lang := fs.String("lang", "mn", "хэл: mn|en")
 	failOnNew := fs.String("fail-on-new", "", "шинэ finding энэ severity-с дээш байвал exit 1: critical|high|medium|low")
 	all := fs.Bool("all", false, "өөрчлөгдөөгүй finding-үүдийг ч хэвлэх")
@@ -81,9 +82,8 @@ func cmdDiff(args []string) int {
 	}
 
 	if *failOnNew != "" {
-		threshold := finding.NormalizeSeverity(strings.ToUpper(*failOnNew))
-		if finding.Rank(threshold) == 0 {
-			fmt.Fprintf(os.Stderr, "анхаар: --fail-on-new='%s' танигдсангүй — хэрэгсэхгүй\n", *failOnNew)
+		threshold, ok := parseSeverityThreshold(*failOnNew, "--fail-on-new")
+		if !ok {
 			return 0
 		}
 		if maxNew := r.MaxNewSeverity(); finding.Rank(maxNew) >= finding.Rank(threshold) {
