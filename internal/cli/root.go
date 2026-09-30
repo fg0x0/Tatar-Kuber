@@ -17,23 +17,26 @@ func Execute() int {
 	if _, code := setLang(os.Args[1:]); code != 0 {
 		return code
 	}
-	if len(os.Args) < 2 {
+	// Хэл уншигдсан тул глобал `--lang` хосыг хасна — эс тэгвээс os.Args[1] нь
+	// "--lang" хэвээр үлдэж, доорх switch түүнийг команд гэж үзнэ.
+	args := append([]string{os.Args[0]}, stripLeadingLang(os.Args[1:])...)
+	if len(args) < 2 {
 		fmt.Print(msg("usage"))
 		return 3
 	}
-	switch os.Args[1] {
+	switch args[1] {
 	case "scan":
-		return cmdScan(os.Args[2:])
+		return cmdScan(args[2:])
 	case "report":
-		return cmdReport(os.Args[2:])
+		return cmdReport(args[2:])
 	case "doctor":
-		return cmdDoctor(os.Args[2:])
+		return cmdDoctor(args[2:])
 	case "gate":
-		return cmdGate(os.Args[2:])
+		return cmdGate(args[2:])
 	case "diff":
-		return cmdDiff(os.Args[2:])
+		return cmdDiff(args[2:])
 	case "verify-lab":
-		return cmdVerifyLab(os.Args[2:])
+		return cmdVerifyLab(args[2:])
 	case "update":
 		fmt.Fprintln(os.Stderr, msg("cmd.update.todo"))
 		return 2

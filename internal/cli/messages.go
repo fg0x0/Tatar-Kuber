@@ -95,6 +95,33 @@ func setLang(args []string) (explicit bool, code int) {
 	return true, 0
 }
 
+// stripLeadingLang — команд сонгогдохоос ӨМНӨ бичигдсэн глобал `--lang` хосыг
+// аргументаас хасна. setLang нь утгыг УНШдаг ч хасдаггүй байсан тул
+// `tatar-kuber --lang mn --help` нь os.Args[1] == "--lang" болж "тодорхойгүй
+// команд" гэж exit 3 буцаадаг байв — тусламжийн бичвэр болон дээрх тайлбар
+// хоёулаа ажиллана гэж амласан хэрнээ.
+//
+// ЗӨВХӨН эхэнд байгаа хосыг хасна: `report --lang mn` дэх флагийг тухайн
+// командын өөрийн FlagSet боловсруулах ёстой тул хөндөхгүй.
+func stripLeadingLang(args []string) []string {
+	for len(args) > 0 {
+		a := args[0]
+		switch {
+		case a == "--lang" || a == "-lang":
+			if len(args) > 1 {
+				args = args[2:] // `--lang mn`
+			} else {
+				args = args[1:] // утгагүй — flag сан нь дараа нь гомдоллоно
+			}
+		case strings.HasPrefix(a, "--lang=") || strings.HasPrefix(a, "-lang="):
+			args = args[1:] // `--lang=mn`
+		default:
+			return args
+		}
+	}
+	return args
+}
+
 func knownLang(v string) bool {
 	for _, l := range uiLangs {
 		if l == v {

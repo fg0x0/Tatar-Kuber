@@ -246,6 +246,13 @@ environment). Every command takes `--lang`, and an unknown value is a usage erro
 well; without it the report keeps the language chosen at scan time, so existing
 pipelines are unaffected.
 
+One known exception: a few **finding descriptions produced by the scanner adapters**
+are still Mongolian-only and are written that way into `scan-result.json`, so they
+appear untranslated even in an `en` document — Trivy's secret findings ("Илэрсэн
+нууц: …") are the case you will actually hit. These are serialised schema fields
+rather than console output, so making them bilingual changes the v1 document shape
+and is tracked separately.
+
 ### Live Mode B — granting read-only access
 
 Live cluster scanning needs credentials, and "trust me, it's read-only" is not an answer a
@@ -613,6 +620,13 @@ Severity босго (`--fail-on`, `--fail-on-new`, `fail_on:`) нь үсгийн
 `--lang`-ыг команд бүр хүлээж авах бөгөөд танигдаагүй утга нь команд бүрт хэрэглээний
 алдаа (exit `3`). `report` дээр `--lang` нь тайланг өөрийг нь ч дахин үүсгэнэ; өгөөгүй
 бол тайлан scan-д сонгосон хэлээрээ үлдэх тул байгаа pipeline хөндөгдөхгүй.
+
+Мэдэгдэж байгаа нэг үл хамаарах зүйл: **scanner adapter-ийн үүсгэдэг зарим finding-ийн
+тайлбар** нь монгол хэл дээр хатуу бичигдсэн бөгөөд `scan-result.json`-д тэр чигээрээ
+ордог тул `en` баримт дотор ч орчуулагдаагүй харагдана — практикт тааралдах нь Trivy-ийн
+нууц илрүүлэлт ("Илэрсэн нууц: …"). Эдгээр нь консолын гаралт биш, схемийн цуваа
+талбарууд тул хоёр хэлтэй болгох нь v1 баримтын хэлбэрийг өөрчилнө — тусад нь
+шийдвэрлэнэ.
 
 ### Live Mode B — read-only хандалт олгох
 
