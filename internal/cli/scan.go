@@ -14,19 +14,24 @@ import (
 )
 
 func cmdScan(args []string) int {
+	if _, code := setLang(args); code != 0 {
+		return code
+	}
 	fs := flag.NewFlagSet("scan", flag.ExitOnError)
-	file := fs.String("f", "", "local manifest/Helm зам (Mode A)")
-	kubeconfig := fs.String("kubeconfig", "", "kubeconfig файл (Mode B)")
-	context_ := fs.String("context", "", "kubeconfig context (Mode B)")
-	namespaces := fs.String("namespace", "", "хязгаарлах namespace-ууд (таслалаар, Mode B)")
-	rawDir := fs.String("raw-dir", "", "цуглуулсан scanner raw JSON-уудын хавтас (offline ingest)")
-	cluster := fs.String("cluster", "cluster", "cluster/target нэр (тайланд)")
-	outDir := fs.String("o", ".", "гаралтын ХАВТАС (бүтэн нэр: --out-dir)")
-	fs.StringVar(outDir, "out-dir", ".", "гаралтын ХАВТАС (-o-ийн бүтэн нэр)")
-	registry := fs.String("registry", "", "canonical-controls.yaml зам")
-	lang := fs.String("lang", "en", "тайлангийн хэл: en | mn")
-	noRaw := fs.Bool("no-raw", false, "live scan-д scanner-уудын түүхий гаралтыг <out>/raw/ дотор ХАДГАЛАХГҮЙ (default: хадгална — нотолгоо)")
-	noRollup := fs.Bool("no-rollup", false, "Pod хэмжээний finding-ийг эзэмшигч controller руу ЗӨӨХГҮЙ (default: зөөнө — нэг зөрчил нэг удаа тоологдоно)")
+	file := fs.String("f", "", msg("flag.scan.file"))
+	kubeconfig := fs.String("kubeconfig", "", msg("flag.scan.kubeconfig"))
+	context_ := fs.String("context", "", msg("flag.scan.context"))
+	namespaces := fs.String("namespace", "", msg("flag.scan.namespace"))
+	rawDir := fs.String("raw-dir", "", msg("flag.scan.rawdir"))
+	cluster := fs.String("cluster", "cluster", msg("flag.scan.cluster"))
+	outDir := fs.String("o", ".", msg("flag.scan.outdir"))
+	fs.StringVar(outDir, "out-dir", ".", msg("flag.scan.outdir.long"))
+	registry := fs.String("registry", "", msg("flag.registry"))
+	// Тайлангийн хэл нь CLI-ийн гаралтын хэлтэй НЭГ: scan-result.json дотор
+	// шингэх гарчиг/зөвлөмж хэрэглэгчийн сонгосон хэлээр бичигдэнэ.
+	addLangFlag(fs, "flag.lang")
+	noRaw := fs.Bool("no-raw", false, msg("flag.scan.noraw"))
+	noRollup := fs.Bool("no-rollup", false, msg("flag.scan.norollup"))
 	_ = fs.Parse(args)
 
 	if code := rejectFormatAsOutDir(*outDir); code != 0 {
@@ -35,12 +40,12 @@ func cmdScan(args []string) int {
 
 	regPath, err := resolveRegistry(*registry)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "алдаа:", err)
+		errln(err)
 		return 3
 	}
 	p, err := buildPipeline(regPath)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "алдаа:", err)
+		errln(err)
 		return 2
 	}
 
@@ -64,12 +69,12 @@ func cmdScan(args []string) int {
 		// горимоор цуглуулагдсаныг энэ давхаргаас МЭДЭХ БОЛОМЖГҮЙ тул таамаглахгүй.
 		raws, inv, err := loadRawDir(*rawDir)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "алдаа:", err)
+			errln(err)
 			return 2
 		}
-		r, err := p.Process(raws, orchestrator.Meta{ClusterName: *cluster, ScanMode: "offline", Lang: *lang, Inventory: inv, NoRollup: *noRollup})
+		r, err := p.Process(raws, orchestrator.Meta{ClusterName: *cluster, ScanMode: "offline", Lang: uiLang, Inventory: inv, NoRollup: *noRollup})
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "алдаа:", err)
+			errln(err)
 			return 2
 		}
 		warnRuns(r.Metadata.ScannerRuns)
@@ -79,7 +84,7 @@ func cmdScan(args []string) int {
 
 	// Live scan: adapter-уудыг ажиллуулна (scanner binary шаардлагатай).
 	if *file == "" && *kubeconfig == "" && *context_ == "" {
-		fmt.Fprintln(os.Stderr, "scan: -f, --kubeconfig/--context эсвэл --raw-dir шаардлагатай")
+		fmt.Fprintln(os.Stderr, msg("scan.input.required"))
 		return 3
 	}
 	target := scanner.Target{
@@ -95,19 +100,19 @@ func cmdScan(args []string) int {
 	// Энэ хавтас нь `scan --raw-dir` оролттой яг ижил бүтэцтэй → дахин боловсруулж болно.
 	if !*noRaw && len(raws) > 0 {
 		if err := saveRaw(filepath.Join(*outDir, "raw"), raws); err != nil {
-			fmt.Fprintln(os.Stderr, "анхаар: raw хадгалж чадсангүй:", err)
+			warnln(msg("warn.raw.save.failed"), err)
 		}
 	}
 
-	r, err := p.Process(raws, orchestrator.Meta{ClusterName: *cluster, ScanMode: mode, Lang: *lang, Runs: runs, NoRollup: *noRollup})
+	r, err := p.Process(raws, orchestrator.Meta{ClusterName: *cluster, ScanMode: mode, Lang: uiLang, Runs: runs, NoRollup: *noRollup})
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "алдаа:", err)
+		errln(err)
 		return 2
 	}
 	warnRuns(r.Metadata.ScannerRuns)
 	reportRollup(r.Metadata.Rollup)
 	if len(raws) == 0 {
-		fmt.Fprintln(os.Stderr, "анхаар: ямар ч scanner ажиллаагүй (scanner binary суулгасан эсэхээ `tatar-kuber doctor`-оор шалгана уу). Offline горим: --raw-dir")
+		warnln(msg("warn.no.scanner.ran"))
 	}
 	return writeResult(r, *outDir)
 }
@@ -135,9 +140,7 @@ func rejectFormatAsOutDir(dir string) int {
 	if !isFormat {
 		return 0
 	}
-	fmt.Fprintf(os.Stderr, "алдаа: scan -o/--out-dir нь ГАРАЛТЫН ХАВТАС хүлээдэг, формат биш ('%s').\n"+
-		"       Формат нь тайлангийн зүйл: tatar-kuber %s --format %s\n"+
-		"       Үнэхээр '%s' нэртэй хавтас хэрэгтэй бол: -o ./%s\n", dir, cmd, dir, dir, dir)
+	errln(msg("scan.outdir.is.format", dir, cmd, dir, dir, dir))
 	return 3
 }
 
@@ -159,18 +162,18 @@ func warnRuns(runs []finding.ScannerRun) {
 		}
 	}
 	for _, p := range orchestrator.Problems(runs) {
-		fmt.Fprintln(os.Stderr, "анхаар:", problemText(p))
+		warnln(problemText(p))
 	}
 }
 
-// problemText — orchestrator-ийн анхааруулгын кодыг бичвэр болгоно. Тэр багц
-// нь БИЧВЭР биш, КОД буцаадаг тул хэрэглэгчид харагдах хэллэг CLI давхаргад л
-// амьдарна — нэг зүйлийг хоёр багцад зэрэг бичих нь тэднийг зөрүүлдэг.
+// problemText — orchestrator-ийн анхааруулгыг хэрэглэгчийн хэл рүү буулгана.
+// Тэр багц нь БИЧВЭР биш, КОД буцаадаг (diff.Warning-тай ижил зарчим) тул
+// хэлний сонголт нэг л газар — энэ каталогт — үлдэнэ.
 func problemText(p orchestrator.Problem) string {
 	if p.Code == orchestrator.ProblemNoFindings {
-		s := p.Scanner + ": ажилласан ч 0 finding normalize хийгдсэнгүй"
+		s := msg("warn.scanner.no.findings", p.Scanner)
 		if p.Unmapped != "" {
-			s += " (canonical зураглалгүй rule: " + p.Unmapped + ")"
+			s += msg("warn.scanner.unmapped", p.Unmapped)
 		}
 		return s
 	}
@@ -183,7 +186,7 @@ func reportRollup(r *finding.RollupInfo) {
 	if r == nil || r.Moved == 0 {
 		return
 	}
-	fmt.Fprintf(os.Stderr, "rollup: %d pod-хэмжээний finding эзэмшигч controller руу зөөгдлөө (%d pod) — нэг зөрчил нэг удаа тоологдоно; болиулах: --no-rollup\n", r.Moved, len(r.Pods))
+	fmt.Fprint(os.Stderr, msg("scan.rollup", r.Moved, len(r.Pods)))
 }
 
 // saveRaw — raw scanner гаралтыг <dir>/<scanner>.json, хувилбаруудыг versions.json болгон бичнэ.
@@ -206,19 +209,19 @@ func saveRaw(dir string, raws []scanner.RawResult) error {
 
 func writeResult(r interface{}, outDir string) int {
 	if err := os.MkdirAll(outDir, 0o755); err != nil {
-		fmt.Fprintln(os.Stderr, "алдаа:", err)
+		errln(err)
 		return 2
 	}
 	path := filepath.Join(outDir, "scan-result.json")
 	data, err := json.MarshalIndent(r, "", "  ")
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "алдаа:", err)
+		errln(err)
 		return 2
 	}
 	if err := os.WriteFile(path, data, 0o644); err != nil {
-		fmt.Fprintln(os.Stderr, "алдаа:", err)
+		errln(err)
 		return 2
 	}
-	fmt.Println("scan-result.json бичигдлээ:", path)
+	fmt.Println(msg("scan.wrote", path))
 	return 0
 }

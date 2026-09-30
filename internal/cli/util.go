@@ -2,8 +2,6 @@ package cli
 
 import (
 	"encoding/json"
-	"fmt"
-	"os"
 	"strings"
 
 	"github.com/ochmunkh/tatar-kuber/internal/finding"
@@ -27,7 +25,7 @@ func jsonUnmarshal(data []byte, v interface{}) error { return json.Unmarshal(dat
 func parseSeverityThreshold(value, flagName string) (finding.Severity, bool) {
 	th := finding.NormalizeSeverity(strings.ToUpper(value))
 	if finding.Rank(th) == 0 {
-		fmt.Fprintf(os.Stderr, "анхаар: %s='%s' танигдсангүй — хэрэгсэхгүй\n", flagName, value)
+		warnln(msg("warn.threshold.unrecognised", flagName, value))
 		return "", false
 	}
 	return th, true
