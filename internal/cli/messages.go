@@ -162,39 +162,17 @@ func addLangFlag(fs *flag.FlagSet, helpID string) {
 
 // awaitingMN — монгол хувилбар нь ХАРААХАН БИЧИГДЭЭГҮЙ бичвэрүүд.
 //
-// Эдгээр нь `verify-lab`-ийн оношийн мөрүүд: ЭНЭ ӨӨРЧЛӨЛТӨӨС ӨМНӨ Ч англи
-// хэлээр л гардаг байсан тул монгол гаралт ЮУГААР Ч ДУТААГҮЙ. Тэдгээрийг энд
-// ил бүртгэсний учир: (1) каталог бүрэн эсэхийг тест шалгах боломжтой хэвээр
-// үлдэнэ, (2) дутууг нь код уншилгүйгээр харж, монгол хэлээр чөлөөтэй бичдэг
-// хүн нэг файл дотор нөхөх боломжтой. Орчуулгыг машинаар ХИЙХГҮЙ.
-// `update` (v2) нь БҮХЭЛДЭЭ англи хэлээр нэмэгдэв: шинэ бичвэрийг машинаар
-// орчуулахгүй гэсэн дээрх шийдвэр хэвээр. Утга нь орчуулах зүйлгүй (зөвхөн
-// баганын зэрэгцүүлэлт, `url`, `sha256`) мөрүүд нь en/mn ижил бичигдсэн тул
-// энд ОРООГҮЙ — тэдгээр нь дутуу биш, орчуулах зүйлгүй.
-var awaitingMN = map[string]bool{
-	"verify.controls":       true,
-	"verify.count":          true,
-	"verify.findings":       true,
-	"verify.min":            true,
-	"verify.missing.header": true,
-	"verify.total":          true,
-
-	"err.update.scanner.unknown": true,
-	"flag.update.check":          true,
-	"flag.update.dryrun":         true,
-	"flag.update.home":           true,
-	"flag.update.scanner":        true,
-	"update.check.absent":        true,
-	"update.check.changes":       true,
-	"update.check.header":        true,
-	"update.check.uptodate":      true,
-	"update.col.pinned":          true,
-	"update.cosign.stub":         true,
-	"update.dryrun.header":       true,
-	"update.installed":           true,
-	"update.installed.header":    true,
-	"update.plan.unpinned":       true,
-}
+// ОДООГООР ХООСОН: `update` (v2)-ийн бичвэрүүд ба `verify-lab`-ийн оношийн
+// мөрүүд монголоор бичигдэж, жагсаалтаас хасагдав. Жагсаалтыг устгаагүй —
+// энэ нь ДАРААГИЙН бичвэрт зориулсан хавх: `TestCatalogHasEveryLanguage` нь
+// mn дутуу ID-г ЗААВАЛ энд бүртгэхийг шаардаж, бүртгэлтэй атлаа mn-тэй болсон
+// ID-г мөн адил барина. Тиймээс орчуулгын цоорхой код дотор ил, тоологдохуйц
+// хэвээр үлдэнэ. Орчуулгыг машинаар ХИЙХГҮЙ — mn дутуу үед гаралт хоосон мөр
+// биш, en рүү унана.
+//
+// Утга нь орчуулах зүйлгүй (зөвхөн баганын зэрэгцүүлэлт, `url`, `sha256`)
+// мөрүүд нь en/mn ижил бичигдсэн тул энд хэзээ ч ОРООГҮЙ.
+var awaitingMN = map[string]bool{}
 
 // catalog — CLI-ийн бүх хэрэглэгчид харагдах бичвэр. mn нь энэ өөрчлөлтөөс
 // өмнөх кодын яг тэр мөрүүд (утга нь хөндөгдөөгүй), en нь шинээр нэмэгдсэн.
@@ -342,15 +320,19 @@ var catalog = map[string]canonical.I18n{
 
 	"flag.update.scanner": {
 		"en": "scanners to update (comma-separated; default: all)",
+		"mn": "шинэчлэх scanner-ууд (таслалаар; default: бүгд)",
 	},
 	"flag.update.dryrun": {
 		"en": "print what WOULD be downloaded and stop — nothing is downloaded, nothing is written",
+		"mn": "юу татагдах БАЙСНЫГ хэвлээд зогсоно — юу ч татагдахгүй, юу ч бичигдэхгүй",
 	},
 	"flag.update.check": {
 		"en": "compare the pinned versions with tools.lock.yaml and stop — nothing is downloaded, nothing is written",
+		"mn": "пиннэсэн хувилбаруудыг tools.lock.yaml-тай тулгаад зогсоно — юу ч татагдахгүй, юу ч бичигдэхгүй",
 	},
 	"flag.update.home": {
 		"en": "directory holding tools.lock.yaml and tools/ (default: ~/.tatar-kuber; $TATAR_HOME is honoured too)",
+		"mn": "tools.lock.yaml ба tools/ хадгалагдах хавтас (default: ~/.tatar-kuber; $TATAR_HOME-ыг ч хүлээж авна)",
 	},
 
 	// ── util / pipeline ────────────────────────────────────────────────────
@@ -550,38 +532,48 @@ var catalog = map[string]canonical.I18n{
 	// хоёр удаа орчуулах шалтгаан алга).
 	"update.dryrun.header": {
 		"en": "update — dry run: nothing is downloaded, nothing is written\n\n",
+		"mn": "update — dry run: юу ч татагдахгүй, юу ч бичигдэхгүй\n\n",
 	},
 	"update.plan.scanner": {"en": "  %-11s %-10s %s\n", "mn": "  %-11s %-10s %s\n"},
 	"update.plan.url":     {"en": "    url     %s\n", "mn": "    url     %s\n"},
 	"update.plan.sha":     {"en": "    sha256  %s\n", "mn": "    sha256  %s\n"},
 	"update.plan.unpinned": {
 		"en": "    sha256  NOT PINNED — update would refuse to install this scanner (pin it in %s)\n",
+		"mn": "    sha256  ПИННЭЭГҮЙ — update энэ scanner-ыг суулгахаас татгалзана (%s дотор пиннэнэ)\n",
 	},
 	"update.check.header": {
 		"en": "update --check — the pinned versions against %s\n\n",
+		"mn": "update --check — пиннэсэн хувилбаруудыг %s-тай тулгав\n\n",
 	},
-	"update.col.pinned": {"en": "PINNED"},
+	"update.col.pinned": {"en": "PINNED", "mn": "ПИННЭСЭН"},
 	"update.check.line": {"en": "  %-11s %-10s %-10s %s\n", "mn": "  %-11s %-10s %-10s %s\n"},
 	"update.check.uptodate": {
 		"en": "up to date",
+		"mn": "шинэчлэх шаардлагагүй",
 	},
 	"update.check.absent": {
 		"en": "not installed by update",
+		"mn": "update-ээр суугаагүй",
 	},
 	"update.check.changes": {
 		"en": "would be replaced",
+		"mn": "солигдоно",
 	},
 	"update.installed.header": {
 		"en": "update: %d scanner(s) verified and installed into %s\n",
+		"mn": "update: %d scanner баталгаажиж %s дотор суулаа\n",
 	},
 	"update.installed": {
 		"en": "  %-11s %-10s installed: %s\n",
+		"mn": "  %-11s %-10s суусан: %s\n",
 	},
 	// Стаб нь баталгаажуулсан гэж ХЭЛЖ БОЛОХГҮЙ — энэ мөр нь гарын үсэг
 	// шалгагдаагүйг ил хэлнэ (tools.lock.yaml ч мөн адил бичнэ).
 	"update.cosign.stub": {
 		"en": "cosign signature verification is NOT implemented yet (planned for v2) — a scanner is accepted " +
 			"on its pinned SHA256 alone, and tools.lock.yaml records cosign: unverified for it",
+		"mn": "cosign гарын үсгийн шалгалт ХАРААХАН ХЭРЭГЖЭЭГҮЙ (v2-т төлөвлөсөн) — scanner нь зөвхөн " +
+			"пиннэсэн SHA256-аараа хүлээн зөвшөөрөгдөж, tools.lock.yaml-д cosign: unverified гэж бичигдэнэ",
 	},
 	"update.lock.wrote": {
 		"en": "tools.lock.yaml written: %s",
@@ -589,12 +581,14 @@ var catalog = map[string]canonical.I18n{
 	},
 	"err.update.scanner.unknown": {
 		"en": "unknown scanner '%s' (known: %s)",
+		"mn": "'%s' scanner танигдсангүй (байгаа: %s)",
 	},
 
 	// ── verify-lab ─────────────────────────────────────────────────────────
 	//
-	// Эдгээрийн ихэнх нь энэ өөрчлөлтөөс ӨМНӨ Ч англи хэлээр л гардаг байсан;
-	// монгол хувилбарыг машинаар зохиохгүй (awaitingMN-г үзнэ үү).
+	// Эдгээр нь энэ репогийн CLI-д хамгийн удаан англиар үлдсэн мөрүүд байв.
+	// `%-8s` нь severity-гийн багана тул хэвээр — зэрэгцүүлэлт нь гаралтыг
+	// нүдээр гүйлгэж уншихад хэрэгтэй.
 	"verify.parse.result": {
 		"en": "scan-result.json parse:",
 		"mn": "scan-result.json parse:",
@@ -603,15 +597,33 @@ var catalog = map[string]canonical.I18n{
 		"en": "expected-findings.json parse:",
 		"mn": "expected-findings.json parse:",
 	},
-	"verify.scenario":       {"en": "verify-lab: %s\n", "mn": "verify-lab: %s\n"},
-	"verify.controls":       {"en": "  controls: expected %d, missing %d\n"},
-	"verify.findings":       {"en": "  findings: actual %d\n"},
-	"verify.missing.header": {"en": "  MISSING controls:\n"},
-	"verify.total":          {"en": "  total findings: expected %d, actual %d\n"},
-	"verify.min":            {"en": "  findings %d < expected min %d\n"},
-	"verify.count":          {"en": "  %-8s expected %d, actual %d  [%s]\n"},
-	"verify.fail":           {"en": "RESULT: FAIL", "mn": "RESULT: FAIL"},
-	"verify.pass":           {"en": "RESULT: PASS", "mn": "RESULT: PASS"},
+	"verify.scenario": {"en": "verify-lab: %s\n", "mn": "verify-lab: %s\n"},
+	"verify.controls": {
+		"en": "  controls: expected %d, missing %d\n",
+		"mn": "  control: хүлээгдэх %d, дутуу %d\n",
+	},
+	"verify.findings": {
+		"en": "  findings: actual %d\n",
+		"mn": "  finding: бодит %d\n",
+	},
+	"verify.missing.header": {
+		"en": "  MISSING controls:\n",
+		"mn": "  ДУТУУ control:\n",
+	},
+	"verify.total": {
+		"en": "  total findings: expected %d, actual %d\n",
+		"mn": "  нийт finding: хүлээгдэх %d, бодит %d\n",
+	},
+	"verify.min": {
+		"en": "  findings %d < expected min %d\n",
+		"mn": "  finding %d < хүлээгдэх доод хязгаар %d\n",
+	},
+	"verify.count": {
+		"en": "  %-8s expected %d, actual %d  [%s]\n",
+		"mn": "  %-8s хүлээгдэх %d, бодит %d  [%s]\n",
+	},
+	"verify.fail": {"en": "RESULT: FAIL", "mn": "RESULT: FAIL"},
+	"verify.pass": {"en": "RESULT: PASS", "mn": "RESULT: PASS"},
 }
 
 const usageEN = `TATAR-Kuber — Kubernetes security posture assessment framework

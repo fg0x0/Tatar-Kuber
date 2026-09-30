@@ -10,35 +10,39 @@ catalogue's own `awaitingMN` list.
 
 **Priority is about who reads it**, not length. This repo's users are platform
 and security engineers running a CI gate, so English is less of a barrier here
-than in Tatar-Shield — but the CLI is the exception: it says it speaks Mongolian
-with `--lang mn`, and where it silently does not, it is breaking its own promise.
+than in Tatar-Shield — but the CLI was the exception: it says it speaks Mongolian
+with `--lang mn`, and where it silently did not, it was breaking its own promise.
+That is closed; what is left below is contributor-facing.
 
 ---
 
-## High — the CLI claims to speak Mongolian and does not, here
+## Closed 2026-09-30 — the CLI now speaks Mongolian everywhere it claims to
 
 `internal/cli/messages.go` carries an `awaitingMN` list: catalogue IDs with
-English text and no Mongolian yet. They fall back to English at runtime rather
-than printing blank, and `TestCatalogHasEveryLanguage` fails if an ID is dropped
-from the list without gaining a Mongolian string — so this list cannot rot
-silently. **21 IDs**, all short (a line or a column heading each):
+English text and no Mongolian yet. It held **21 IDs**; it is now **empty**. Every
+entry in the catalogue has both an `en` and an `mn` string.
 
-| IDs | What the user sees |
+| IDs, all written | What the user sees |
 |---|---|
 | `update.check.absent` `update.check.changes` `update.check.header` `update.check.uptodate` `update.col.pinned` `update.installed` `update.installed.header` `update.dryrun.header` `update.plan.unpinned` `update.cosign.stub` | everything `tatar-kuber update --check` and `--dry-run` print |
 | `flag.update.check` `flag.update.dryrun` `flag.update.home` `flag.update.scanner` | the four `update` flag descriptions in `--help` |
 | `err.update.scanner.unknown` | the error for an unknown scanner name |
-| `verify.controls` `verify.count` `verify.findings` `verify.min` `verify.missing.header` `verify.total` | the `verify-lab` diagnostic table — **these were English-only before this work too**, not introduced by it |
+| `verify.controls` `verify.count` `verify.findings` `verify.min` `verify.missing.header` `verify.total` | the `verify-lab` diagnostic table — **these were English-only before the `update` work too**, not introduced by it |
 
-Roughly **250 words** in total. Removing an ID from `awaitingMN` and adding its
-`mn` string is the whole change.
+The empty list stays in the source: `TestCatalogHasEveryLanguage` fails both for
+an entry with no `mn` string that is *not* on the list, and for one still on the
+list that *has* gained an `mn` string. So the gap for the next message written in
+one language only is counted in code, and cannot rot silently.
+
+The terms that stay English inside the Mongolian — `SHA256`, `cosign`, `scanner`,
+`exit code`, `tools.lock.yaml`, `dry run` — are the ones the rest of the repo
+already leaves English. Column headings were kept inside their `%-10s` field so
+`update --check` still lines up: `ПИННЭСЭН` next to `doctor`'s `СУУСАН`.
 
 ## Low — contributor-facing
 
 | Section | File | Words | Note |
 |---|---|---:|---|
-| The engineering documents (.docx and .md) | `CONTRIBUTING.md` | ~200 | New section; the Mongolian half of CONTRIBUTING.md is a short summary rather than a mirror, so this needs a Mongolian summary, not a translation. |
-| Updating the scanners | `README.md` (English half) | ~120 | The `update` paragraph — the checksum refusal, `--dry-run`/`--check`, cosign not implemented. The Mongolian half has no counterpart yet. |
 | *(whole file)* | `CODE_OF_CONDUCT.md` | 313 | **Do not hand-translate.** Contributor Covenant v2.1 has an official Mongolian translation — use it rather than writing a second, divergent wording. |
 | *(whole file)* | `docs/releases/README.md` | 152 | Index of the release notes. |
 | *(whole file)* | `.github/ISSUE_TEMPLATE/*.md`, `PULL_REQUEST_TEMPLATE.md` | 221 | Contributor-facing. |
@@ -50,7 +54,10 @@ Roughly **250 words** in total. Removing an ID from `awaitingMN` and adding its
 ## Deliberately *not* a gap
 
 - **`README.md`** carries a full Mongolian half, enforced structurally by
-  `internal/canonical/readme_test.go` in CI.
+  `internal/canonical/readme_test.go` in CI. The `update` paragraph (checksum
+  refusal, `--dry-run`/`--check`, cosign not implemented) now has its Mongolian
+  counterpart; so does CONTRIBUTING.md's `.docx`/`.md` section, written as a
+  summary because that half is a summary rather than a mirror.
 - **The six engineering specs** (`docs/0*.md`) are Mongolian-first already, and
   are generated from the `.docx` — never edit the `.md` to change wording, see
   CONTRIBUTING.md.
@@ -59,5 +66,6 @@ Roughly **250 words** in total. Removing an ID from `awaitingMN` and adding its
 
 ## If you translate one thing
 
-The 21 `awaitingMN` IDs. They are the only place where the tool *claims* to
-speak Mongolian and then does not, and each one is a single line.
+`docs/releases/README.md` — 152 words, and it is the index a Mongolian reader
+lands on when following a release link. Everything user-facing is written; what
+is left is contributor plumbing.
