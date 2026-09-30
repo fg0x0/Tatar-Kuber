@@ -134,24 +134,34 @@ func knownLang(v string) bool {
 // langFromArgs — args дотроос --lang-ийн утгыг олно. Утгагүй `--lang` (мөрийн
 // сүүлд) нь ЭНД биш, flag parser-т баригдана (exit 2) — exit code-ийн гэрээг
 // өөрчлөхгүйн тулд зориуд орхив.
+//
+// Давтагдсан бол СҮҮЛЧИЙНХ нь хүчинтэй, Go-ийн flag сангийнхтай ижил. Энэ нь
+// `tatar-kuber --lang mn doctor --lang en` дээр л мэдэгддэг: Execute глобал
+// флагийг командын аргументын өмнө буцааж наадаг тул хоёулаа жагсаалтад орно.
+// Эхнийхийг нь авбал setLang "mn" гэж хэлэх атал командын өөрийн FlagSet "en"
+// гэж уншиж, нэг дуудлага дотор хоёр өөр хариулт үүснэ.
 func langFromArgs(args []string) (string, bool) {
+	found, ok := "", false
 	for i, a := range args {
 		if a == "--" {
-			return "", false
+			return found, ok
 		}
 		name, val, hasVal := strings.Cut(a, "=")
 		if name != "-lang" && name != "--lang" {
 			continue
 		}
 		if hasVal {
-			return val, true
+			found, ok = val, true
+			continue
 		}
 		if i+1 < len(args) {
-			return args[i+1], true
+			found, ok = args[i+1], true
+			continue
 		}
-		return "", false
+		// Утгагүй, мөрийн сүүлд — flag parser-т үлдээнэ.
+		return found, ok
 	}
-	return "", false
+	return found, ok
 }
 
 // addLangFlag — --lang-ыг FlagSet-д бүртгэнэ: `--help`-д харагдах ба parser
